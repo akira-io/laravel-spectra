@@ -18,7 +18,7 @@ final readonly class RequestProxy
         private AuthBroker $authBroker
     ) {}
 
-    public function execute(ExecuteCommand $command): ExecuteResult
+    public function handle(ExecuteCommand $command): ExecuteResult
     {
         $this->checkRateLimit();
 
