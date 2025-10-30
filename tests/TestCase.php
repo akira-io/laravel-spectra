@@ -2,9 +2,9 @@
 
 namespace Akira\Spectra\Tests;
 
+use Akira\Spectra\SpectraServiceProvider;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Orchestra\Testbench\TestCase as Orchestra;
-use Akira\Spectra\SpectraServiceProvider;
 
 class TestCase extends Orchestra
 {

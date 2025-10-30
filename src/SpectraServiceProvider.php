@@ -2,9 +2,9 @@
 
 namespace Akira\Spectra;
 
+use Akira\Spectra\Commands\SpectraCommand;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
-use Akira\Spectra\Commands\SpectraCommand;
 
 class SpectraServiceProvider extends PackageServiceProvider
 {
