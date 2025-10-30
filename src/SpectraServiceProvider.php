@@ -1,25 +1,36 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Akira\Spectra;
 
-use Akira\Spectra\Commands\SpectraCommand;
+use Akira\Spectra\Commands\InstallCommand;
+use Illuminate\Support\Facades\Gate;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 
-class SpectraServiceProvider extends PackageServiceProvider
+final class SpectraServiceProvider extends PackageServiceProvider
 {
     public function configurePackage(Package $package): void
     {
-        /*
-         * This class is a Package Service Provider
-         *
-         * More info: https://github.com/spatie/laravel-package-tools
-         */
         $package
             ->name('laravel-spectra')
-            ->hasConfigFile()
-            ->hasViews()
-            ->hasMigration('create_laravel_spectra_table')
-            ->hasCommand(SpectraCommand::class);
+            ->hasConfigFile('spectra')
+            ->hasCommand(InstallCommand::class);
+    }
+
+    public function packageBooted(): void
+    {
+        if (config('spectra.enabled')) {
+            $this->loadRoutesFrom(__DIR__.'/../routes/spectra.php');
+        }
+
+        Gate::define('use-spectra', function ($user) {
+            if (method_exists($user, 'hasRole')) {
+                return $user->hasRole('developer');
+            }
+
+            return true;
+        });
     }
 }
