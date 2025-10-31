@@ -12,6 +12,8 @@ final class SpectraController extends Controller
 {
     public function index(): Response
     {
+        Inertia::setRootView('spectra::app');
+
         return Inertia::render('Spectra', [
             'schemaUrl' => route('spectra.schema'),
             'executeUrl' => route('spectra.execute'),

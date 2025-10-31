@@ -1,1 +1,6 @@
 @import "tailwindcss";
+
+@theme {
+  --color-*: initial;
+  --font-family-sans: system-ui, sans-serif;
+}

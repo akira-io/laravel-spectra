@@ -1,66 +1,209 @@
-# This is my package laravel-spectra
+# Spectra API Inspector
 
-[![Latest Version on Packagist](https://img.shields.io/packagist/v/akira-io/laravel-spectra.svg?style=flat-square)](https://packagist.org/packages/akira-io/laravel-spectra)
-[![GitHub Tests Action Status](https://img.shields.io/github/actions/workflow/status/akira-io/laravel-spectra/run-tests.yml?branch=main&label=tests&style=flat-square)](https://github.com/akira-io/laravel-spectra/actions?query=workflow%3Arun-tests+branch%3Amain)
-[![GitHub Code Style Action Status](https://img.shields.io/github/actions/workflow/status/akira-io/laravel-spectra/fix-php-code-style-issues.yml?branch=main&label=code%20style&style=flat-square)](https://github.com/akira-io/laravel-spectra/actions?query=workflow%3A"Fix+PHP+code+style+issues"+branch%3Amain)
-[![Total Downloads](https://img.shields.io/packagist/dt/akira-io/laravel-spectra.svg?style=flat-square)](https://packagist.org/packages/akira-io/laravel-spectra)
+**Illuminate your API** — Interactive API inspector for Laravel 12 with Inertia + React.
 
-This is where your description should go. Limit it to a paragraph or two. Consider adding a small example.
+[![Latest Version on Packagist](https://img.shields.io/packagist/v/akira/laravel-spectra.svg?style=flat-square)](https://packagist.org/packages/akira/laravel-spectra)
+[![GitHub Tests Action Status](https://img.shields.io/github/actions/workflow/status/akira-io/laravel-spectra/php-tests.yml?branch=main&label=tests&style=flat-square)](https://github.com/akira-io/laravel-spectra/actions?query=workflow%3Aphp-tests+branch%3Amain)
+[![Total Downloads](https://img.shields.io/packagist/dt/akira/laravel-spectra.svg?style=flat-square)](https://packagist.org/packages/akira/laravel-spectra)
 
-## Support us
+Spectra is a powerful, developer-focused API inspector built exclusively for Laravel 12 applications. It provides an embedded, interactive console accessible at `/spectra` that helps you explore, test, and debug your API endpoints during development.
 
-[<img src="https://github-ads.s3.eu-central-1.amazonaws.com/laravel-spectra.jpg?t=1" width="419px" />](https://spatie.be/github-ad-click/laravel-spectra)
+## Features
 
-We invest a lot of resources into creating [best in class open source packages](https://spatie.be/open-source). You can support us by [buying one of our paid products](https://spatie.be/open-source/support-us).
+- 🔍 **Auto-discovery** of all application routes and parameters
+- 📋 **JSON Schema generation** (2020-12) from FormRequest validation rules
+- ⚡ **Internal request execution** through Laravel's HTTP kernel
+- 🔐 **Multiple authentication modes**: current user, impersonate, Bearer token, Basic auth
+- 🍪 **Cookie inspector** with Laravel encryption support
+- 🎨 **Modern React UI** built with Inertia.js (no external packages needed)
+- 💾 **Request collections** with export/import functionality
+- 🌙 **Dark mode** support
+- 🔒 **Production-safe** with comprehensive security controls
 
-We highly appreciate you sending us a postcard from your hometown, mentioning which of our package(s) you are using. You'll find our address on [our contact page](https://spatie.be/about-us). We publish all received postcards on [our virtual postcard wall](https://spatie.be/open-source/postcards).
+## Requirements
+
+- PHP 8.4 or higher
+- Laravel 12.x
+- Inertia.js (automatically included)
 
 ## Installation
 
-You can install the package via composer:
+Install the package via Composer:
 
 ```bash
-composer require akira-io/laravel-spectra
+composer require --dev akira/laravel-spectra
 ```
 
-You can publish and run the migrations with:
+Install and publish configuration:
 
 ```bash
-php artisan vendor:publish --tag="laravel-spectra-migrations"
-php artisan migrate
+php artisan spectra:install
 ```
 
-You can publish the config file with:
+This will publish the configuration file to `config/spectra.php`.
 
-```bash
-php artisan vendor:publish --tag="laravel-spectra-config"
-```
+## Configuration
 
-This is the contents of the published config file:
+The configuration file provides comprehensive control over Spectra's behavior:
 
 ```php
 return [
+    // Enable/disable Spectra (defaults to local environment only)
+    'enabled' => env('SPECTRA_ENABLED', app()->environment('local')),
+    
+    // Restrict to local environment only
+    'only_local' => env('SPECTRA_ONLY_LOCAL', true),
+    
+    // Authentication guard to use
+    'guard' => env('SPECTRA_GUARD', 'web'),
+    
+    // Gate for impersonation feature
+    'impersonation_gate' => 'use-spectra',
+    
+    // Rate limiting for execute endpoint
+    'rate_limit' => [
+        'max' => 60,
+        'per_minutes' => 1,
+    ],
+    
+    // Headers to strip from requests
+    'strip_headers' => [
+        'authorization',
+        'cookie',
+        'x-api-key',
+    ],
+    
+    // Fields to mask in responses
+    'mask_fields' => [
+        'password',
+        'token',
+        'authorization',
+        'api_key',
+        'secret',
+    ],
 ];
-```
-
-Optionally, you can publish the views using
-
-```bash
-php artisan vendor:publish --tag="laravel-spectra-views"
 ```
 
 ## Usage
 
+### Accessing Spectra
+
+Once installed, visit `/spectra` in your browser when running in a local environment. You must be authenticated and have the `use-spectra` permission.
+
+### Gate Configuration
+
+By default, Spectra defines a `use-spectra` gate that checks if the user has a `developer` role. You can customize this in your `AuthServiceProvider`:
+
 ```php
-$spectra = new Akira\Spectra();
-echo $spectra->echoPhrase('Hello, Akira!');
+use Illuminate\Support\Facades\Gate;
+
+Gate::define('use-spectra', function ($user) {
+    return $user->email === 'admin@example.com';
+});
+```
+
+### Authentication Modes
+
+Spectra supports four authentication modes for executing requests:
+
+1. **Current User**: Execute requests as the currently authenticated user
+2. **Impersonate**: Execute requests as a different user (requires `use-spectra` gate approval)
+3. **Bearer Token**: Provide a Bearer token for authentication
+4. **Basic Auth**: Use username/password authentication
+
+### Working with Schemas
+
+Spectra automatically generates JSON Schema (2020-12) from your FormRequest validation rules. Supported validation rules include:
+
+- Basic types: `string`, `integer`, `numeric`, `boolean`, `array`
+- Formats: `email`, `url`, `date`, `uuid`
+- Constraints: `min`, `max`, `between`, `in` (enum), `regex`
+- Files: `file`, `image`, `mimes`
+- Modifiers: `nullable`, `required`, `sometimes`
+
+### Request Collections
+
+Save frequently used requests as collections:
+
+1. Configure your request (endpoint, parameters, auth mode)
+2. Click "Save" in the Collections panel
+3. Give it a name
+4. Load it anytime with one click
+
+Export/import collections as JSON for sharing with your team.
+
+## Security
+
+Spectra is designed with security as a top priority:
+
+- **Disabled by default** outside local environments
+- **Rate limiting** on request execution
+- **Sensitive header stripping** (Authorization, Cookie, etc.)
+- **Field masking** for sensitive data in responses
+- **Gate-based authorization** for all features
+- **No external network requests** — all execution is internal
+
+### Production Safety
+
+Spectra will automatically return a 404 error when:
+- `enabled` config is `false`
+- `only_local` is `true` and the environment is not local
+
+**Never enable Spectra in production environments.**
+
+## Extensibility
+
+### Service Container Bindings
+
+All Spectra services are bound to the container and can be extended or replaced:
+
+```php
+app()->bind(RouteScanner::class, function ($app) {
+    return new CustomRouteScanner($app['router']);
+});
+```
+
+### Custom Schema Builders
+
+Override the schema builder to add custom rule conversions:
+
+```php
+app()->extend(SchemaBuilder::class, function ($builder, $app) {
+    // Add custom logic
+    return $builder;
+});
 ```
 
 ## Testing
 
+Run the test suite:
+
 ```bash
 composer test
 ```
+
+Run static analysis:
+
+```bash
+composer analyse
+```
+
+Format code:
+
+```bash
+composer format
+```
+
+## CI/CD
+
+Spectra includes GitHub Actions workflows for:
+
+- PHP tests with Pest
+- Static analysis with Larastan
+- Code style with Pint
+- JavaScript build and type checking
+- Commitlint for conventional commits
+- Automated releases with release-it
 
 ## Changelog
 
@@ -68,11 +211,11 @@ Please see [CHANGELOG](CHANGELOG.md) for more information on what has changed re
 
 ## Contributing
 
-Please see [CONTRIBUTING](CONTRIBUTING.md) for details.
+Contributions are welcome! Please follow the conventional commits specification for all commits.
 
 ## Security Vulnerabilities
 
-Please review [our security policy](../../security/policy) on how to report security vulnerabilities.
+If you discover a security vulnerability, please email security@akira-io.com. All security vulnerabilities will be promptly addressed.
 
 ## Credits
 
@@ -82,3 +225,4 @@ Please review [our security policy](../../security/policy) on how to report secu
 ## License
 
 The MIT License (MIT). Please see [License File](LICENSE.md) for more information.
+

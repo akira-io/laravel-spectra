@@ -23,6 +23,7 @@ final class SpectraServiceProvider extends PackageServiceProvider
     {
         if (config('spectra.enabled')) {
             $this->loadRoutesFrom(__DIR__.'/../routes/spectra.php');
+            $this->loadViewsFrom(__DIR__.'/../resources/views', 'spectra');
         }
 
         Gate::define('use-spectra', function ($user) {
