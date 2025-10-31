@@ -18,7 +18,27 @@ export default function RequestBuilder({ endpoint, executeUrl, onResponse }: Pro
   const [pathParams, setPathParams] = useState<Record<string, string>>({});
   const [query, setQuery] = useState<Record<string, string>>({});
   const [headers, setHeaders] = useState<Record<string, string>>({ 'Accept': 'application/json' });
-  const [body, setBody] = useState('');
+
+  const initializeBody = () => {
+    if (endpoint.body_parameters && Object.keys(endpoint.body_parameters).length > 0) {
+      const bodyObj: Record<string, any> = {};
+      Object.entries(endpoint.body_parameters).forEach(([key, meta]: [string, any]) => {
+        if (meta.type === 'integer') {
+          bodyObj[key] = 0;
+        } else if (meta.type === 'boolean') {
+          bodyObj[key] = false;
+        } else if (meta.type === 'array') {
+          bodyObj[key] = [];
+        } else {
+          bodyObj[key] = '';
+        }
+      });
+      return JSON.stringify(bodyObj, null, 2);
+    }
+    return '';
+  };
+  
+  const [body, setBody] = useState(initializeBody());
   const [loading, setLoading] = useState(false);
 
   const handleExecute = async () => {
@@ -27,8 +47,7 @@ export default function RequestBuilder({ endpoint, executeUrl, onResponse }: Pro
     try {
       const authMode = (window as any).spectraAuthMode || 'current';
       const authData = (window as any).spectraAuthData || {};
-      
-      // Get CSRF token
+
       const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 
       const result = await ky
@@ -90,13 +109,22 @@ export default function RequestBuilder({ endpoint, executeUrl, onResponse }: Pro
         </div>
       </CardHeader>
       <CardContent className="space-y-3 pt-0">
-        <Tabs defaultValue="params" className="w-full">
-          <TabsList className="grid w-full grid-cols-4 h-8">
+        <Tabs defaultValue="body" className="w-full">
+          <TabsList className="grid w-full grid-cols-3 h-8">
+            <TabsTrigger value="body" disabled={['GET', 'HEAD'].includes(method)} className="text-xs">Body</TabsTrigger>
             <TabsTrigger value="params" className="text-xs">Params</TabsTrigger>
             <TabsTrigger value="headers" className="text-xs">Headers</TabsTrigger>
-            <TabsTrigger value="body" disabled={['GET', 'HEAD'].includes(method)} className="text-xs">Body</TabsTrigger>
-            <TabsTrigger value="method" className="text-xs">Method</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="body" className="space-y-1.5 mt-3">
+            <h3 className="text-xs font-semibold">Request Body (JSON)</h3>
+            <textarea
+              value={body}
+              onChange={(e) => setBody(e.target.value)}
+              className="w-full px-2.5 py-2 text-xs border border-input rounded-md bg-background text-foreground font-mono focus:outline-none focus:ring-1 focus:ring-ring h-48 resize-none"
+              placeholder='{"key": "value"}'
+            />
+          </TabsContent>
 
           <TabsContent value="params" className="space-y-3 mt-3">
             {parameterInputs.length > 0 ? (
@@ -150,19 +178,12 @@ export default function RequestBuilder({ endpoint, executeUrl, onResponse }: Pro
               className="w-full px-2.5 py-2 text-xs border border-input rounded-md bg-background text-foreground font-mono focus:outline-none focus:ring-1 focus:ring-ring h-32 resize-none"
             />
           </TabsContent>
+        </Tabs>
 
-          <TabsContent value="body" className="space-y-1.5 mt-3">
-            <h3 className="text-xs font-semibold">Request Body (JSON)</h3>
-            <textarea
-              value={body}
-              onChange={(e) => setBody(e.target.value)}
-              className="w-full px-2.5 py-2 text-xs border border-input rounded-md bg-background text-foreground font-mono focus:outline-none focus:ring-1 focus:ring-ring h-48 resize-none"
-              placeholder='{"key": "value"}'
-            />
-          </TabsContent>
-
-          <TabsContent value="method" className="space-y-2.5 mt-3">
-            <h3 className="text-xs font-semibold mb-2">Select HTTP Method</h3>
+        {/* Method selector outside tabs if multiple methods available */}
+        {endpoint.methods.filter((m: string) => !['HEAD', 'OPTIONS'].includes(m)).length > 1 && (
+          <div className="space-y-2">
+            <h3 className="text-xs font-semibold">HTTP Method</h3>
             <div className="grid grid-cols-2 gap-1.5">
               {endpoint.methods
                 .filter((m: string) => !['HEAD', 'OPTIONS'].includes(m))
@@ -170,6 +191,7 @@ export default function RequestBuilder({ endpoint, executeUrl, onResponse }: Pro
                   <Button
                     key={m}
                     variant={method === m ? "default" : "outline"}
+                    size="sm"
                     className={`font-mono font-bold text-xs h-8 ${method === m ? getMethodColor(m) : ''}`}
                     onClick={() => setMethod(m)}
                   >
@@ -177,8 +199,8 @@ export default function RequestBuilder({ endpoint, executeUrl, onResponse }: Pro
                   </Button>
                 ))}
             </div>
-          </TabsContent>
-        </Tabs>
+          </div>
+        )}
 
         <Button
           onClick={handleExecute}

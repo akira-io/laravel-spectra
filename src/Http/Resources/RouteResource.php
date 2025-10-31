@@ -34,6 +34,7 @@ final class RouteResource extends JsonResource
                 ],
                 $this->route->parameters
             ),
+            'body_parameters' => $this->route->bodyParameters,
         ];
     }
 }

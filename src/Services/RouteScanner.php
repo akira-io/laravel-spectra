@@ -6,12 +6,16 @@ namespace Akira\Spectra\Services;
 
 use Akira\Spectra\Dto\ParameterMeta;
 use Akira\Spectra\Dto\RouteMeta;
+use Akira\Spectra\Services\BodyParameterExtractor;
 use Illuminate\Routing\Route;
 use Illuminate\Routing\Router;
 
 final readonly class RouteScanner
 {
-    public function __construct(private Router $router) {}
+    public function __construct(
+        private Router $router,
+        private BodyParameterExtractor $bodyParameterExtractor
+    ) {}
 
     /**
      * @return array<RouteMeta>
@@ -34,8 +38,7 @@ final readonly class RouteScanner
     private function shouldSkip(Route $route): bool
     {
         $uri = $route->uri();
-
-        // Check exclude patterns
+        
         $excludeRoutes = config('spectra.exclude_routes', [
             'spectra',
             '_ignition',
@@ -51,22 +54,21 @@ final readonly class RouteScanner
             }
         }
 
-        // Check include patterns
+  
         $includeRoutes = config('spectra.include_routes', ['api/*']);
         
         if (empty($includeRoutes)) {
-            return false; // Include all if no patterns specified
+            return false;
         }
 
         foreach ($includeRoutes as $pattern) {
-            // Convert wildcard pattern to regex
             $regex = str_replace(['*', '/'], ['.*', '\/'], $pattern);
             if (preg_match('/^' . $regex . '$/', $uri)) {
-                return false; // Include this route
+                return false;
             }
         }
 
-        return true; // Exclude by default if include patterns are specified
+        return true;
     }
 
     private function mapRoute(Route $route): RouteMeta
@@ -78,6 +80,7 @@ final readonly class RouteScanner
             action: $route->getActionName(),
             middleware: $route->gatherMiddleware(),
             parameters: $this->extractParameters($route),
+            bodyParameters: $this->extractBodyParameters($route),
         );
     }
 
@@ -97,5 +100,20 @@ final readonly class RouteScanner
         }
 
         return $parameters;
+    }
+
+    /**
+     * @return array<string, array{type: string, required: bool, rules: string}>
+     */
+    private function extractBodyParameters(Route $route): array
+    {
+        $methods = $route->methods();
+        $hasBodyMethods = array_intersect($methods, ['POST', 'PUT', 'PATCH', 'DELETE']);
+        
+        if (empty($hasBodyMethods)) {
+            return [];
+        }
+
+        return $this->bodyParameterExtractor->extract($route);
     }
 }
