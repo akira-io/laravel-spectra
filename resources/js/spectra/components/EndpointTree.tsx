@@ -10,6 +10,7 @@ export default function EndpointTree({ schemaUrl, onSelect }: Props) {
   const [routes, setRoutes] = useState<any[]>([]);
   const [filter, setFilter] = useState('');
   const [loading, setLoading] = useState(true);
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     ky.get(schemaUrl)
@@ -17,9 +18,47 @@ export default function EndpointTree({ schemaUrl, onSelect }: Props) {
       .then((data: any) => {
         setRoutes(data.routes || []);
         setLoading(false);
+        
+        // Auto-expand all groups initially
+        const allGroups = new Set<string>();
+        (data.routes || []).forEach((route: any) => {
+          let groupName = 'Other';
+          
+          if (route.action && route.action !== 'Closure') {
+            const controllerName = route.action.split('@')[0]?.split('\\').pop() || '';
+            groupName = controllerName.replace(/Controller$/, '') || 'Other';
+          } else {
+            const uriParts = route.uri.split('/').filter(Boolean);
+            
+            for (const part of uriParts) {
+              if (!part.startsWith('{') && !part.endsWith('}')) {
+                if (!['api', 'admin', 'v1', 'v2', 'v3', 'web'].includes(part.toLowerCase())) {
+                  groupName = part
+                    .split('-')
+                    .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
+                    .join(' ');
+                  break;
+                }
+              }
+            }
+          }
+          
+          allGroups.add(groupName);
+        });
+        setExpandedGroups(allGroups);
       })
       .catch(() => setLoading(false));
   }, [schemaUrl]);
+
+  const toggleGroup = (groupName: string) => {
+    const newExpanded = new Set(expandedGroups);
+    if (newExpanded.has(groupName)) {
+      newExpanded.delete(groupName);
+    } else {
+      newExpanded.add(groupName);
+    }
+    setExpandedGroups(newExpanded);
+  };
 
   const filteredRoutes = routes.filter(
     (route) =>
@@ -28,11 +67,64 @@ export default function EndpointTree({ schemaUrl, onSelect }: Props) {
   );
 
   const groupedRoutes = filteredRoutes.reduce((acc, route) => {
-    const controller = route.action?.split('@')[0]?.split('\\').pop() || 'Other';
-    if (!acc[controller]) acc[controller] = [];
-    acc[controller].push(route);
+    let groupName = 'Other';
+
+    // Try to get group from controller
+    if (route.action && route.action !== 'Closure') {
+      const controllerName = route.action.split('@')[0]?.split('\\').pop() || '';
+      // Remove "Controller" suffix and use as group name
+      groupName = controllerName.replace(/Controller$/, '') || 'Other';
+    }
+    // If it's a closure, try to group by resource name from URI
+    else {
+      const uriParts = route.uri.split('/').filter(Boolean);
+      
+      // Find the resource name (first non-parameter segment)
+      for (const part of uriParts) {
+        if (!part.startsWith('{') && !part.endsWith('}')) {
+          // Remove common prefixes like 'api', 'admin', 'v1', etc
+          if (!['api', 'admin', 'v1', 'v2', 'v3', 'web'].includes(part.toLowerCase())) {
+            groupName = part
+              .split('-')
+              .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+              .join(' ');
+            break;
+          }
+        }
+      }
+    }
+
+    if (!acc[groupName]) acc[groupName] = [];
+    acc[groupName].push(route);
     return acc;
   }, {} as Record<string, any[]>);
+
+  // Sort groups alphabetically, but keep 'Other' at the end
+  const sortedGroups = Object.entries(groupedRoutes)
+    .sort(([a], [b]) => {
+      if (a === 'Other') return 1;
+      if (b === 'Other') return -1;
+      return a.localeCompare(b);
+    })
+    .map(([groupName, routes]) => {
+      // Sort routes within each group by URI
+      const sortedRoutes = routes.sort((a, b) => {
+        // First by base path (without parameters)
+        const aBase = a.uri.replace(/\/\{[^}]+\}/g, '');
+        const bBase = b.uri.replace(/\/\{[^}]+\}/g, '');
+        if (aBase !== bBase) return aBase.localeCompare(bBase);
+        
+        // Then by number of parameters (less parameters first)
+        const aParams = (a.uri.match(/\{[^}]+\}/g) || []).length;
+        const bParams = (b.uri.match(/\{[^}]+\}/g) || []).length;
+        if (aParams !== bParams) return aParams - bParams;
+        
+        // Finally by URI
+        return a.uri.localeCompare(b.uri);
+      });
+      
+      return [groupName, sortedRoutes] as [string, any[]];
+    });
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -47,63 +139,95 @@ export default function EndpointTree({ schemaUrl, onSelect }: Props) {
   }, []);
 
   if (loading) {
-    return <div className="p-4">Loading routes...</div>;
+    return (
+      <div className="p-3 text-xs text-gray-400">
+        <div className="flex items-center gap-2">
+          <svg className="animate-spin h-3 w-3" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          Loading routes...
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="p-4">
+    <div className="p-3">
       <input
         id="endpoint-search"
         type="text"
         value={filter}
         onChange={(e) => setFilter(e.target.value)}
         placeholder="Search endpoints (⌘K)"
-        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 mb-4"
+        className="w-full px-3 py-2 text-sm border border-white/10 rounded-md bg-[#1a1a1a] text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 mb-3"
       />
 
-      {Object.entries(groupedRoutes).map(([controller, routes]) => (
-        <div key={controller} className="mb-4">
-          <h3 className="font-semibold text-sm mb-2 text-gray-700 dark:text-gray-300">
-            {controller}
-          </h3>
-          {routes.map((route, idx) => (
+      {sortedGroups.map(([groupName, routes]) => {
+        const isExpanded = expandedGroups.has(groupName) || filter !== '';
+        
+        return (
+          <div key={groupName} className="mb-3">
             <button
-              key={idx}
-              onClick={() => onSelect(route)}
-              className="w-full text-left px-3 py-2 mb-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-sm"
+              onClick={() => toggleGroup(groupName)}
+              className="w-full flex items-center justify-between mb-1.5 px-2 py-1.5 rounded-md hover:bg-white/5 transition-colors"
             >
-              <div className="flex gap-2 mb-1">
-                {route.methods
-                  .filter((m: string) => !['HEAD', 'OPTIONS'].includes(m))
-                  .map((method: string) => (
-                    <span
-                      key={method}
-                      className={`text-xs px-2 py-0.5 rounded font-mono ${
-                        method === 'GET'
-                          ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
-                          : method === 'POST'
-                          ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                          : method === 'PUT' || method === 'PATCH'
-                          ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
-                          : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-                      }`}
-                    >
-                      {method}
-                    </span>
-                  ))}
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-gray-500">
+                  {isExpanded ? '▼' : '▶'}
+                </span>
+                <h3 className="font-semibold text-xs text-white">
+                  {groupName}
+                </h3>
               </div>
-              <div className="font-mono text-xs text-gray-600 dark:text-gray-400">
-                {route.uri}
-              </div>
-              {route.name && (
-                <div className="text-xs text-gray-500 dark:text-gray-500">
-                  {route.name}
-                </div>
-              )}
+              <span className="text-xs text-gray-400 px-1.5 py-0.5 bg-white/5 rounded">
+                {routes.length}
+              </span>
             </button>
-          ))}
-        </div>
-      ))}
+            
+            {isExpanded && (
+              <div className="space-y-0.5 ml-2">
+                {routes.map((route, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => onSelect(route)}
+                    className="w-full text-left px-2 py-2 rounded-md hover:bg-white/5 transition-colors group"
+                  >
+                    <div className="flex gap-1.5 mb-1">
+                      {route.methods
+                        .filter((m: string) => !['HEAD', 'OPTIONS'].includes(m))
+                        .map((method: string) => (
+                          <span
+                            key={method}
+                            className={`text-xs px-1.5 py-0.5 rounded font-mono font-semibold ${
+                              method === 'GET'
+                                ? 'bg-blue-500/20 text-blue-400'
+                                : method === 'POST'
+                                ? 'bg-green-500/20 text-green-400'
+                                : method === 'PUT' || method === 'PATCH'
+                                ? 'bg-yellow-500/20 text-yellow-400'
+                                : 'bg-red-500/20 text-red-400'
+                            }`}
+                          >
+                            {method}
+                          </span>
+                        ))}
+                    </div>
+                    <div className="font-mono text-xs text-gray-400 group-hover:text-gray-300 transition-colors">
+                      {route.uri}
+                    </div>
+                    {route.name && (
+                      <div className="text-xs text-gray-500 mt-0.5">
+                        {route.name}
+                      </div>
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }

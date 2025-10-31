@@ -1,4 +1,9 @@
 import { useState } from 'react';
+import { Button } from './ui/button';
+import { Input } from './ui/input';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
+import { Badge } from './ui/badge';
+import { Shield, User, Key, Lock } from 'lucide-react';
 
 export default function AuthPanel() {
   const [mode, setMode] = useState('current');
@@ -22,74 +27,94 @@ export default function AuthPanel() {
     setTimeout(updateGlobalAuth, 0);
   };
 
-  return (
-    <div className="mb-6 p-4 border border-gray-300 dark:border-gray-600 rounded">
-      <h3 className="font-semibold mb-3">Authentication</h3>
+  const authModes = [
+    { value: 'current', label: 'Current User', icon: User },
+    { value: 'impersonate', label: 'Impersonate', icon: Shield },
+    { value: 'bearer', label: 'Bearer Token', icon: Key },
+    { value: 'basic', label: 'Basic Auth', icon: Lock },
+  ];
 
-      <div className="flex gap-2 mb-4">
-        {['current', 'impersonate', 'bearer', 'basic'].map((m) => (
-          <button
-            key={m}
-            onClick={() => handleModeChange(m)}
-            className={`px-3 py-1 rounded text-sm ${
-              mode === m
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600'
-            }`}
-          >
-            {m.charAt(0).toUpperCase() + m.slice(1)}
-          </button>
-        ))}
+  return (
+    <div className="space-y-3">
+      <div className="grid grid-cols-2 gap-1.5">
+        {authModes.map((authMode) => {
+          const Icon = authMode.icon;
+          const isActive = mode === authMode.value;
+          return (
+            <Button
+              key={authMode.value}
+              onClick={() => handleModeChange(authMode.value)}
+              variant={isActive ? "default" : "outline"}
+              size="sm"
+              className={`h-8 text-xs ${isActive ? 'gradient-primary' : ''}`}
+            >
+              <Icon className="h-3 w-3 mr-1.5" />
+              {authMode.label.split(' ')[0]}
+            </Button>
+          );
+        })}
       </div>
 
       {mode === 'impersonate' && (
-        <input
-          type="number"
-          value={impersonateId}
-          onChange={(e) => {
-            setImpersonateId(e.target.value);
-            setTimeout(updateGlobalAuth, 0);
-          }}
-          placeholder="User ID"
-          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
-        />
+        <div className="space-y-1.5">
+          <label className="text-xs font-medium text-muted-foreground">User ID</label>
+          <Input
+            type="number"
+            value={impersonateId}
+            onChange={(e) => {
+              setImpersonateId(e.target.value);
+              setTimeout(updateGlobalAuth, 0);
+            }}
+            placeholder="Enter ID"
+            className="h-8 text-xs"
+          />
+        </div>
       )}
 
       {mode === 'bearer' && (
-        <input
-          type="text"
-          value={bearerToken}
-          onChange={(e) => {
-            setBearerToken(e.target.value);
-            setTimeout(updateGlobalAuth, 0);
-          }}
-          placeholder="Bearer Token"
-          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
-        />
+        <div className="space-y-1.5">
+          <label className="text-xs font-medium text-muted-foreground">Token</label>
+          <Input
+            type="text"
+            value={bearerToken}
+            onChange={(e) => {
+              setBearerToken(e.target.value);
+              setTimeout(updateGlobalAuth, 0);
+            }}
+            placeholder="Bearer token"
+            className="h-8 text-xs font-mono"
+          />
+        </div>
       )}
 
       {mode === 'basic' && (
         <div className="space-y-2">
-          <input
-            type="text"
-            value={basicUser}
-            onChange={(e) => {
-              setBasicUser(e.target.value);
-              setTimeout(updateGlobalAuth, 0);
-            }}
-            placeholder="Username"
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
-          />
-          <input
-            type="password"
-            value={basicPass}
-            onChange={(e) => {
-              setBasicPass(e.target.value);
-              setTimeout(updateGlobalAuth, 0);
-            }}
-            placeholder="Password"
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
-          />
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-muted-foreground">Username</label>
+            <Input
+              type="text"
+              value={basicUser}
+              onChange={(e) => {
+                setBasicUser(e.target.value);
+                setTimeout(updateGlobalAuth, 0);
+              }}
+              placeholder="Username"
+              className="h-8 text-xs"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-muted-foreground">Password</label>
+            <Input
+              type="password"
+              value={basicPass}
+              onChange={(e) => {
+                setBasicPass(e.target.value);
+                setTimeout(updateGlobalAuth, 0);
+              }}
+              placeholder="Password"
+              className="h-8 text-xs"
+            />
+          </div>
         </div>
       )}
     </div>

@@ -1,4 +1,8 @@
 import { useState, useEffect } from 'react';
+import { Button } from './ui/button';
+import { Input } from './ui/input';
+import { Badge } from './ui/badge';
+import { Save, Upload, Download, Trash2, FolderOpen, Plus, X } from 'lucide-react';
 
 export default function Collections() {
   const [collections, setCollections] = useState<any[]>([]);
@@ -68,63 +72,100 @@ export default function Collections() {
   };
 
   return (
-    <div className="p-4 border-t border-gray-200 dark:border-gray-700">
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="font-semibold text-sm">Collections</h3>
-        <button
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <Button
           onClick={() => setShowSave(!showSave)}
-          className="text-sm px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+          size="sm"
+          variant={showSave ? "default" : "outline"}
+          className="w-full h-8 text-xs gradient-primary"
         >
-          + Save
-        </button>
+          <Plus className="h-3 w-3 mr-1.5" />
+          Save Collection
+        </Button>
       </div>
 
       {showSave && (
-        <div className="mb-3 p-2 border border-gray-300 dark:border-gray-600 rounded">
-          <input
+        <div className="space-y-2 p-2 border border-border/50 rounded-lg bg-card/50">
+          <Input
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Collection name"
-            className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 mb-2"
+            className="h-8 text-xs"
+            onKeyDown={(e) => e.key === 'Enter' && saveCollection()}
           />
-          <button
-            onClick={saveCollection}
-            className="w-full text-sm px-2 py-1 bg-green-600 text-white rounded hover:bg-green-700"
-          >
-            Save
-          </button>
+          <div className="flex gap-1.5">
+            <Button
+              onClick={saveCollection}
+              size="sm"
+              className="flex-1 h-7 text-xs gradient-primary"
+            >
+              <Save className="h-3 w-3 mr-1" />
+              Save
+            </Button>
+            <Button
+              onClick={() => setShowSave(false)}
+              size="sm"
+              variant="outline"
+              className="h-7 text-xs"
+            >
+              <X className="h-3 w-3" />
+            </Button>
+          </div>
         </div>
       )}
 
-      <div className="space-y-2 mb-3">
-        {collections.map((collection, idx) => (
-          <div
-            key={idx}
-            className="flex items-center justify-between p-2 border border-gray-300 dark:border-gray-600 rounded text-sm"
-          >
-            <button onClick={() => loadCollection(collection)} className="flex-1 text-left">
-              {collection.name}
-            </button>
-            <button
-              onClick={() => deleteCollection(idx)}
-              className="text-red-600 hover:text-red-700 ml-2"
+      {collections.length > 0 && (
+        <div className="space-y-1.5">
+          {collections.map((collection, idx) => (
+            <div
+              key={idx}
+              className="flex items-center gap-1.5 p-2 border border-border/50 rounded-lg bg-card/50 hover:bg-card/80 transition-colors group"
             >
-              ×
-            </button>
-          </div>
-        ))}
-      </div>
+              <button
+                onClick={() => loadCollection(collection)}
+                className="flex-1 text-left text-xs font-medium truncate hover:text-primary transition-colors"
+              >
+                <FolderOpen className="h-3 w-3 inline mr-1.5" />
+                {collection.name}
+              </button>
+              <Button
+                onClick={() => deleteCollection(idx)}
+                size="sm"
+                variant="ghost"
+                className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+              >
+                <Trash2 className="h-3 w-3 text-destructive" />
+              </Button>
+            </div>
+          ))}
+        </div>
+      )}
 
-      <div className="flex gap-2">
-        <button
+      <div className="flex gap-1.5 pt-2 border-t border-border/50">
+        <Button
           onClick={exportCollections}
-          className="flex-1 text-xs px-2 py-1 bg-gray-200 dark:bg-gray-700 rounded hover:bg-gray-300 dark:hover:bg-gray-600"
+          size="sm"
+          variant="outline"
+          disabled={collections.length === 0}
+          className="flex-1 h-7 text-xs"
         >
+          <Download className="h-3 w-3 mr-1" />
           Export
-        </button>
-        <label className="flex-1 text-xs px-2 py-1 bg-gray-200 dark:bg-gray-700 rounded hover:bg-gray-300 dark:hover:bg-gray-600 text-center cursor-pointer">
-          Import
+        </Button>
+        <label className="flex-1">
+          <Button
+            size="sm"
+            variant="outline"
+            className="w-full h-7 text-xs cursor-pointer"
+            asChild
+          >
+            <span>
+              <Upload className="h-3 w-3 mr-1" />
+              Import
+            </span>
+          </Button>
           <input type="file" onChange={importCollections} className="hidden" accept=".json" />
         </label>
       </div>

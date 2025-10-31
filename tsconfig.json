@@ -17,7 +17,8 @@
     "noFallthroughCasesInSwitch": true,
     "paths": {
       "@/*": ["./resources/js/spectra/*"]
-    }
+    },
+    "baseUrl": "."
   },
   "include": ["resources/js/spectra"],
   "references": [{ "path": "./tsconfig.node.json" }]

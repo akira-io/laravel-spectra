@@ -1,5 +1,11 @@
 import { useState } from 'react';
 import ky from 'ky';
+import { Button } from './ui/button';
+import { Input } from './ui/input';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
+import { Badge } from './ui/badge';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
+import { PlayIcon, Loader2 } from 'lucide-react';
 
 interface Props {
   endpoint: any;
@@ -21,9 +27,15 @@ export default function RequestBuilder({ endpoint, executeUrl, onResponse }: Pro
     try {
       const authMode = (window as any).spectraAuthMode || 'current';
       const authData = (window as any).spectraAuthData || {};
+      
+      // Get CSRF token
+      const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 
       const result = await ky
         .post(executeUrl, {
+          headers: {
+            'X-CSRF-TOKEN': csrfToken || '',
+          },
           json: {
             endpoint: endpoint.uri,
             method,
@@ -52,91 +64,140 @@ export default function RequestBuilder({ endpoint, executeUrl, onResponse }: Pro
   };
 
   const parameterInputs = endpoint.parameters || [];
+  
+  const getMethodColor = (m: string) => {
+    const colors: Record<string, string> = {
+      'GET': 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20',
+      'POST': 'bg-blue-500/10 text-blue-500 border-blue-500/20',
+      'PUT': 'bg-amber-500/10 text-amber-500 border-amber-500/20',
+      'PATCH': 'bg-orange-500/10 text-orange-500 border-orange-500/20',
+      'DELETE': 'bg-red-500/10 text-red-500 border-red-500/20',
+    };
+    return colors[m] || 'bg-gray-500/10 text-gray-500 border-gray-500/20';
+  };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-xl font-bold mb-2">{endpoint.uri}</h2>
-        <select
-          value={method}
-          onChange={(e) => setMethod(e.target.value)}
-          className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
-        >
-          {endpoint.methods
-            .filter((m: string) => !['HEAD', 'OPTIONS'].includes(m))
-            .map((m: string) => (
-              <option key={m} value={m}>
-                {m}
-              </option>
-            ))}
-        </select>
-      </div>
+    <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
+      <CardHeader className="pb-3">
+        <div className="flex items-center justify-between">
+          <div className="space-y-0.5">
+            <CardTitle className="text-base font-mono">{endpoint.uri}</CardTitle>
+            <CardDescription className="text-xs">Configure your request</CardDescription>
+          </div>
+          <Badge className={`${getMethodColor(method)} font-mono font-bold px-2.5 py-1`}>
+            {method}
+          </Badge>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-3 pt-0">
+        <Tabs defaultValue="params" className="w-full">
+          <TabsList className="grid w-full grid-cols-4 h-8">
+            <TabsTrigger value="params" className="text-xs">Params</TabsTrigger>
+            <TabsTrigger value="headers" className="text-xs">Headers</TabsTrigger>
+            <TabsTrigger value="body" disabled={['GET', 'HEAD'].includes(method)} className="text-xs">Body</TabsTrigger>
+            <TabsTrigger value="method" className="text-xs">Method</TabsTrigger>
+          </TabsList>
 
-      {parameterInputs.length > 0 && (
-        <div>
-          <h3 className="font-semibold mb-2">Path Parameters</h3>
-          {parameterInputs.map((param: any) => (
-            <div key={param.name} className="mb-2">
-              <label className="block text-sm mb-1">
-                {param.name} {param.required && <span className="text-red-500">*</span>}
-              </label>
-              <input
-                type="text"
-                value={pathParams[param.name] || ''}
-                onChange={(e) => setPathParams({ ...pathParams, [param.name]: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
+          <TabsContent value="params" className="space-y-3 mt-3">
+            {parameterInputs.length > 0 ? (
+              <div className="space-y-2.5">
+                <h3 className="text-xs font-semibold">Path Parameters</h3>
+                {parameterInputs.map((param: any) => (
+                  <div key={param.name} className="space-y-1.5">
+                    <label className="text-xs font-medium text-muted-foreground">
+                      {param.name} {param.required && <span className="text-destructive">*</span>}
+                    </label>
+                    <Input
+                      type="text"
+                      value={pathParams[param.name] || ''}
+                      onChange={(e) => setPathParams({ ...pathParams, [param.name]: e.target.value })}
+                      placeholder={`Enter ${param.name}`}
+                      className="font-mono h-8 text-xs"
+                    />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-6 text-muted-foreground text-xs">
+                No path parameters required
+              </div>
+            )}
+            
+            <div className="space-y-1.5">
+              <h3 className="text-xs font-semibold">Query Parameters</h3>
+              <textarea
+                value={JSON.stringify(query, null, 2)}
+                onChange={(e) => {
+                  try {
+                    setQuery(JSON.parse(e.target.value));
+                  } catch {}
+                }}
+                className="w-full px-2.5 py-2 text-xs border border-input rounded-md bg-background text-foreground font-mono focus:outline-none focus:ring-1 focus:ring-ring h-20 resize-none"
+                placeholder='{"key": "value"}'
               />
             </div>
-          ))}
-        </div>
-      )}
+          </TabsContent>
 
-      <div>
-        <h3 className="font-semibold mb-2">Query Parameters</h3>
-        <textarea
-          value={JSON.stringify(query, null, 2)}
-          onChange={(e) => {
-            try {
-              setQuery(JSON.parse(e.target.value));
-            } catch {}
-          }}
-          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 font-mono text-sm h-24"
-          placeholder='{"key": "value"}'
-        />
-      </div>
+          <TabsContent value="headers" className="space-y-1.5 mt-3">
+            <h3 className="text-xs font-semibold">Request Headers</h3>
+            <textarea
+              value={JSON.stringify(headers, null, 2)}
+              onChange={(e) => {
+                try {
+                  setHeaders(JSON.parse(e.target.value));
+                } catch {}
+              }}
+              className="w-full px-2.5 py-2 text-xs border border-input rounded-md bg-background text-foreground font-mono focus:outline-none focus:ring-1 focus:ring-ring h-32 resize-none"
+            />
+          </TabsContent>
 
-      <div>
-        <h3 className="font-semibold mb-2">Headers</h3>
-        <textarea
-          value={JSON.stringify(headers, null, 2)}
-          onChange={(e) => {
-            try {
-              setHeaders(JSON.parse(e.target.value));
-            } catch {}
-          }}
-          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 font-mono text-sm h-24"
-        />
-      </div>
+          <TabsContent value="body" className="space-y-1.5 mt-3">
+            <h3 className="text-xs font-semibold">Request Body (JSON)</h3>
+            <textarea
+              value={body}
+              onChange={(e) => setBody(e.target.value)}
+              className="w-full px-2.5 py-2 text-xs border border-input rounded-md bg-background text-foreground font-mono focus:outline-none focus:ring-1 focus:ring-ring h-48 resize-none"
+              placeholder='{"key": "value"}'
+            />
+          </TabsContent>
 
-      {!['GET', 'HEAD'].includes(method) && (
-        <div>
-          <h3 className="font-semibold mb-2">Body</h3>
-          <textarea
-            value={body}
-            onChange={(e) => setBody(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 font-mono text-sm h-48"
-            placeholder='{"key": "value"}'
-          />
-        </div>
-      )}
+          <TabsContent value="method" className="space-y-2.5 mt-3">
+            <h3 className="text-xs font-semibold mb-2">Select HTTP Method</h3>
+            <div className="grid grid-cols-2 gap-1.5">
+              {endpoint.methods
+                .filter((m: string) => !['HEAD', 'OPTIONS'].includes(m))
+                .map((m: string) => (
+                  <Button
+                    key={m}
+                    variant={method === m ? "default" : "outline"}
+                    className={`font-mono font-bold text-xs h-8 ${method === m ? getMethodColor(m) : ''}`}
+                    onClick={() => setMethod(m)}
+                  >
+                    {m}
+                  </Button>
+                ))}
+            </div>
+          </TabsContent>
+        </Tabs>
 
-      <button
-        onClick={handleExecute}
-        disabled={loading}
-        className="px-6 py-3 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
-      >
-        {loading ? 'Executing...' : 'Execute Request'}
-      </button>
-    </div>
+        <Button
+          onClick={handleExecute}
+          disabled={loading}
+          className="w-full gradient-primary text-white font-semibold shine-effect h-9"
+        >
+          {loading ? (
+            <>
+              <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
+              Executing...
+            </>
+          ) : (
+            <>
+              <PlayIcon className="mr-2 h-3.5 w-3.5" />
+              Execute Request
+            </>
+          )}
+        </Button>
+      </CardContent>
+    </Card>
   );
 }

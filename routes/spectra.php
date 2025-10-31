@@ -9,7 +9,14 @@ use Akira\Spectra\Http\Controllers\SpectraController;
 use Akira\Spectra\Http\Middleware\EnsureSpectraEnabled;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['web', 'auth', 'can:use-spectra', EnsureSpectraEnabled::class])
+$middleware = ['web', EnsureSpectraEnabled::class];
+
+if (config('spectra.require_auth', true)) {
+    $middleware[] = 'auth';
+    $middleware[] = 'can:use-spectra';
+}
+
+Route::middleware($middleware)
     ->prefix('spectra')
     ->name('spectra.')
     ->group(function () {

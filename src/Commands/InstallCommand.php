@@ -21,11 +21,19 @@ final class InstallCommand extends Command
             '--force' => true,
         ]);
 
+        $this->components->info('Publishing Spectra assets...');
+
+        $this->call('vendor:publish', [
+            '--tag' => 'spectra-assets',
+            '--force' => true,
+        ]);
+
         $this->components->info('Spectra installed successfully!');
         $this->components->info('Visit /spectra in your browser (when in local environment).');
 
         $this->newLine();
         $this->components->warn('Remember to configure your Gate for "use-spectra" permission.');
+        $this->components->warn('Set SPECTRA_REQUIRE_AUTH=false in .env to disable authentication in development.');
 
         return self::SUCCESS;
     }

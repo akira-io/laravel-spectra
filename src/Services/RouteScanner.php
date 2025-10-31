@@ -35,10 +35,38 @@ final readonly class RouteScanner
     {
         $uri = $route->uri();
 
-        return str_starts_with($uri, 'spectra') ||
-               str_starts_with($uri, '_ignition') ||
-               str_starts_with($uri, 'sanctum') ||
-               str_starts_with($uri, 'telescope');
+        // Check exclude patterns
+        $excludeRoutes = config('spectra.exclude_routes', [
+            'spectra',
+            '_ignition',
+            'sanctum',
+            'telescope',
+            'horizon',
+            'pulse',
+        ]);
+
+        foreach ($excludeRoutes as $pattern) {
+            if (str_starts_with($uri, $pattern)) {
+                return true;
+            }
+        }
+
+        // Check include patterns
+        $includeRoutes = config('spectra.include_routes', ['api/*']);
+        
+        if (empty($includeRoutes)) {
+            return false; // Include all if no patterns specified
+        }
+
+        foreach ($includeRoutes as $pattern) {
+            // Convert wildcard pattern to regex
+            $regex = str_replace(['*', '/'], ['.*', '\/'], $pattern);
+            if (preg_match('/^' . $regex . '$/', $uri)) {
+                return false; // Include this route
+            }
+        }
+
+        return true; // Exclude by default if include patterns are specified
     }
 
     private function mapRoute(Route $route): RouteMeta

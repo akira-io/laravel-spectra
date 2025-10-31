@@ -49,8 +49,18 @@ final readonly class RequestProxy
         if (! in_array($command->method, ['GET', 'HEAD'])) {
             if (is_array($command->body)) {
                 $request->merge($command->body);
-            } else {
-                $request->setContent($command->body);
+            } elseif ($command->body) {
+                // Set raw content for non-array bodies
+                $request->replace([]);
+                $request->initialize(
+                    $request->query->all(),
+                    $request->request->all(),
+                    $request->attributes->all(),
+                    $request->cookies->all(),
+                    $request->files->all(),
+                    $request->server->all(),
+                    $command->body
+                );
             }
         }
 

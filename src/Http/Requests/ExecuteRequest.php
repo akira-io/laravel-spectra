@@ -12,6 +12,10 @@ final class ExecuteRequest extends FormRequest
 {
     public function authorize(): bool
     {
+        if (! config('spectra.require_auth', true)) {
+            return true;
+        }
+
         return $this->user()?->can('use-spectra') ?? false;
     }
 
