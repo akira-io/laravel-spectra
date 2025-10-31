@@ -1,0 +1,22 @@
+{
+  "git": {
+    "commitMessage": "chore(release): ${version}",
+    "tagName": "v${version}"
+  },
+  "npm": {
+    "publish": false
+  },
+  "github": {
+    "release": true,
+    "releaseName": "v${version}"
+  },
+  "plugins": {
+    "@release-it/conventional-changelog": {
+      "preset": "angular",
+      "infile": "CHANGELOG.md"
+    }
+  },
+  "hooks": {
+    "before:init": ["composer validate", "vendor/bin/pest", "npm run build"]
+  }
+}
