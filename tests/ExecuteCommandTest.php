@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 use Akira\Spectra\Dto\AuthMode;
 use Akira\Spectra\Dto\ExecuteCommand;
-use Akira\Spectra\Services\RequestProxy;
 
 it('creates execute command from array', function () {
     $data = [

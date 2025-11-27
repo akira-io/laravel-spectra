@@ -3,8 +3,8 @@
 declare(strict_types=1);
 
 use Akira\Spectra\Dto\ExecuteResult;
-use Akira\Spectra\Http\Resources\ExecuteResultResource;
 use Akira\Spectra\Dto\RouteMeta;
+use Akira\Spectra\Http\Resources\ExecuteResultResource;
 use Akira\Spectra\Http\Resources\RouteResource;
 
 it('transforms execute result correctly', function () {

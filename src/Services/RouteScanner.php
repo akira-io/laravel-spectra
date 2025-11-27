@@ -38,7 +38,7 @@ final readonly class RouteScanner
     private function shouldSkip(Route $route): bool
     {
         $uri = $route->uri();
-        
+
         $excludeRoutes = config('spectra.exclude_routes', [
             'spectra',
             '_ignition',
@@ -54,16 +54,15 @@ final readonly class RouteScanner
             }
         }
 
-  
         $includeRoutes = config('spectra.include_routes', ['api/*']);
-        
+
         if (empty($includeRoutes)) {
             return false;
         }
 
         foreach ($includeRoutes as $pattern) {
             $regex = str_replace(['*', '/'], ['.*', '\/'], $pattern);
-            if (preg_match('/^' . $regex . '$/', $uri)) {
+            if (preg_match('/^'.$regex.'$/', $uri)) {
                 return false;
             }
         }
@@ -109,17 +108,17 @@ final readonly class RouteScanner
     {
         $methods = $route->methods();
         $hasBodyMethods = array_intersect($methods, ['POST', 'PUT', 'PATCH', 'DELETE']);
-        
+
         if (empty($hasBodyMethods)) {
             return [];
         }
 
         $parameters = $this->bodyParameterExtractor->extract($route);
-        
+
         foreach ($parameters as $fieldName => &$meta) {
             $meta['example'] = $this->fakerGenerator->generate($fieldName, $meta['type'], $meta['rules']);
         }
-        
+
         return $parameters;
     }
 }

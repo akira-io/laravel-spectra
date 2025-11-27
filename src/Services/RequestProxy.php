@@ -8,7 +8,6 @@ use Akira\Spectra\Dto\ExecuteCommand;
 use Akira\Spectra\Dto\ExecuteResult;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Http\Request;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\RateLimiter;
 
 final readonly class RequestProxy

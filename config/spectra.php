@@ -8,11 +8,9 @@ return [
     'require_auth' => env('SPECTRA_REQUIRE_AUTH', true),
     'guard' => env('SPECTRA_GUARD', 'web'),
     'impersonation_gate' => 'use-spectra',
-    
 
     'auto_fill_faker' => env('SPECTRA_AUTO_FILL_FAKER', true),
-    
-    
+
     'include_routes' => [
         'api/*',
     ],
@@ -24,7 +22,7 @@ return [
         'horizon',
         'pulse',
     ],
-    
+
     'rate_limit' => [
         'max' => 60,
         'per_minutes' => 1,

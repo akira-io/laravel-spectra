@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 use Akira\Spectra\Dto\RouteMeta;
 use Akira\Spectra\Services\SchemaBuilder;
-use Illuminate\Routing\Router;
 use Illuminate\Contracts\Validation\Factory as ValidationFactory;
+use Illuminate\Routing\Router;
 
 beforeEach(function () {
     $this->builder = new SchemaBuilder(

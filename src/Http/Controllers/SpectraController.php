@@ -21,8 +21,8 @@ final class SpectraController extends Controller
             'executeUrl' => route('spectra.execute'),
             'cookiesUrl' => route('spectra.cookies'),
             'assets' => [
-                'css' => asset('vendor/spectra/build/' . $manifest['resources/css/app.css']['file']),
-                'js' => asset('vendor/spectra/build/' . $manifest['resources/js/spectra/main.tsx']['file']),
+                'css' => asset('vendor/spectra/build/'.$manifest['resources/css/app.css']['file']),
+                'js' => asset('vendor/spectra/build/'.$manifest['resources/js/spectra/main.tsx']['file']),
             ],
         ]);
     }

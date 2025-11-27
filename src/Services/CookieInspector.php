@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Akira\Spectra\Services;
 
 use Illuminate\Contracts\Encryption\Encrypter;
-use Illuminate\Support\Facades\Cookie;
 
 final readonly class CookieInspector
 {
@@ -26,9 +25,9 @@ final readonly class CookieInspector
                 'raw' => $value,
             ];
         }
-        
+
         foreach (request()->cookies->all() as $name => $value) {
-            if (!isset($_COOKIE[$name])) {
+            if (! isset($_COOKIE[$name])) {
                 $cookies[] = [
                     'name' => $name,
                     'value' => $this->decryptValue($value),
