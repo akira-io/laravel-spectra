@@ -1,9 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
-import { Badge } from './ui/badge';
-import { Shield, User, Key, Lock } from 'lucide-react';
+import { Shield, User, Key, Lock, CheckCircle2 } from 'lucide-react';
 
 export default function AuthPanel() {
   const [mode, setMode] = useState('current');
@@ -11,6 +9,20 @@ export default function AuthPanel() {
   const [bearerToken, setBearerToken] = useState('');
   const [basicUser, setBasicUser] = useState('');
   const [basicPass, setBasicPass] = useState('');
+  const [autoToken, setAutoToken] = useState<string | null>(null);
+
+  useEffect(() => {
+    const checkToken = () => {
+      const token = (window as any).spectraToken;
+      if (token && token !== autoToken) {
+        setAutoToken(token);
+        setBearerToken(token);
+      }
+    };
+    
+    const interval = setInterval(checkToken, 500);
+    return () => clearInterval(interval);
+  }, [autoToken]);
 
   const updateGlobalAuth = () => {
     (window as any).spectraAuthMode = mode;
@@ -84,6 +96,12 @@ export default function AuthPanel() {
             placeholder="Bearer token"
             className="h-8 text-xs font-mono"
           />
+          {autoToken && (
+            <div className="flex items-center gap-1.5 text-xs text-green-600 dark:text-green-400">
+              <CheckCircle2 className="h-3 w-3" />
+              <span>Token auto-set from login</span>
+            </div>
+          )}
         </div>
       )}
 

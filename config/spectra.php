@@ -9,9 +9,12 @@ return [
     'guard' => env('SPECTRA_GUARD', 'web'),
     'impersonation_gate' => 'use-spectra',
     
-    // Route filtering
+
+    'auto_fill_faker' => env('SPECTRA_AUTO_FILL_FAKER', true),
+    
+    
     'include_routes' => [
-        'api/*',  // Include all API routes
+        'api/*',
     ],
     'exclude_routes' => [
         'spectra',

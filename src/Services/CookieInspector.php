@@ -26,6 +26,17 @@ final readonly class CookieInspector
                 'raw' => $value,
             ];
         }
+        
+        foreach (request()->cookies->all() as $name => $value) {
+            if (!isset($_COOKIE[$name])) {
+                $cookies[] = [
+                    'name' => $name,
+                    'value' => $this->decryptValue($value),
+                    'encrypted' => $this->isEncrypted($value),
+                    'raw' => $value,
+                ];
+            }
+        }
 
         return $cookies;
     }

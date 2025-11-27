@@ -6,7 +6,6 @@ namespace Akira\Spectra\Services;
 
 use Akira\Spectra\Dto\ParameterMeta;
 use Akira\Spectra\Dto\RouteMeta;
-use Akira\Spectra\Services\BodyParameterExtractor;
 use Illuminate\Routing\Route;
 use Illuminate\Routing\Router;
 
@@ -14,7 +13,8 @@ final readonly class RouteScanner
 {
     public function __construct(
         private Router $router,
-        private BodyParameterExtractor $bodyParameterExtractor
+        private BodyParameterExtractor $bodyParameterExtractor,
+        private FakerValueGenerator $fakerGenerator
     ) {}
 
     /**
@@ -114,6 +114,12 @@ final readonly class RouteScanner
             return [];
         }
 
-        return $this->bodyParameterExtractor->extract($route);
+        $parameters = $this->bodyParameterExtractor->extract($route);
+        
+        foreach ($parameters as $fieldName => &$meta) {
+            $meta['example'] = $this->fakerGenerator->generate($fieldName, $meta['type'], $meta['rules']);
+        }
+        
+        return $parameters;
     }
 }

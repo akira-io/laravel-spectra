@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Head } from '@inertiajs/react';
 import EndpointTree from '../components/EndpointTree';
 import RequestBuilder from '../components/RequestBuilder';
@@ -7,7 +7,6 @@ import ResponseViewer from '../components/ResponseViewer';
 import CookiePanel from '../components/CookiePanel';
 import Collections from '../components/Collections';
 import { Button } from '../components/ui/button';
-import { ScrollArea } from '../components/ui/scroll-area';
 import { Sun, Moon, Zap, Cookie, FolderTree, Layout, Shield, FolderOpen } from 'lucide-react';
 
 interface Props {
@@ -26,13 +25,35 @@ export default function Spectra({ schemaUrl, executeUrl, cookiesUrl }: Props) {
     setResponse(null); // Clear response when changing endpoint
   };
 
+  useEffect(() => {
+    document.body.classList.add('spectra-theme');
+    document.documentElement.classList.add('dark');
+
+    return () => {
+      document.body.classList.remove('spectra-theme');
+      document.documentElement.classList.remove('dark');
+    };
+  }, []);
+
   return (
     <>
       <Head title="Spectra - API Inspector" />
       <div className={darkMode ? 'dark' : ''}>
-        <div className="min-h-screen flex flex-col bg-gradient-to-br from-background via-background to-muted/20">
-          {/* Modern Professional Header */}
-          <header className="sticky top-0 z-50 flex justify-between items-center px-6 py-3 bg-card/80 backdrop-blur-xl border-b border-border/50 shadow-lg">
+        {/* Gradient Background - Spectra Style */}
+        <div
+          className="pointer-events-none fixed inset-0"
+          style={{
+            zIndex: -2,
+            background: `
+              radial-gradient(ellipse 80% 50% at 50% -20%, oklch(50% 0.15 285 / 0.15), transparent),
+              radial-gradient(ellipse 60% 50% at 50% 120%, oklch(60% 0.12 315 / 0.1), transparent)
+            `
+          }}
+        />
+
+        <div className="h-screen flex flex-col bg-gradient-to-br from-background via-background to-muted/20">
+          {/* Fixed Header */}
+          <header className="flex-none flex justify-between items-center px-6 py-3 bg-card/80 backdrop-blur-xl border-b border-border/50 shadow-lg">
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl gradient-primary shadow-lg shadow-primary/25">
@@ -60,39 +81,41 @@ export default function Spectra({ schemaUrl, executeUrl, cookiesUrl }: Props) {
             </div>
           </header>
 
-          <div className="flex flex-1 overflow-hidden">
-            {/* Left Sidebar - Endpoints */}
+          {/* Fixed Layout Container */}
+          <div className="flex-1 flex overflow-hidden">
+            {/* Left Sidebar - Endpoints (Fixed with scrollable content) */}
             <aside className="w-64 border-r border-border/50 bg-card/30 backdrop-blur-sm flex flex-col">
-              <div className="p-3 border-b border-border/50 bg-card/50">
+              <div className="flex-none p-3 border-b border-border/50 bg-card/50">
                 <div className="flex items-center gap-2 mb-0.5">
                   <FolderTree className="h-3.5 w-3.5 text-primary" />
                   <h2 className="text-xs font-semibold">Endpoints</h2>
                 </div>
                 <p className="text-[10px] text-muted-foreground">Browse routes</p>
               </div>
-              <ScrollArea className="flex-1">
+              <div className="flex-1 overflow-y-auto">
                 <div className="p-2">
                   <EndpointTree
                     schemaUrl={schemaUrl}
                     onSelect={handleEndpointSelect}
+                    selectedEndpoint={selectedEndpoint}
                   />
                 </div>
-              </ScrollArea>
+              </div>
             </aside>
 
             {/* Main Content Area - Split Request/Response */}
             <div className="flex-1 flex overflow-hidden">
-              {/* Left Side - Request Builder + Auth */}
+              {/* Left Side - Request Builder (scrollable) */}
               <div className="flex-1 flex flex-col border-r border-border/50 bg-background/50 overflow-hidden">
-                <ScrollArea className="flex-1">
+                <div className="flex-1 overflow-y-auto">
                   <div className="p-4 space-y-4">
                     {selectedEndpoint ? (
                       <>
                         {/* Auth Section Compact */}
-                        <div className="glass-card rounded-lg border border-border/50 p-3">
+
                           <AuthPanel />
-                        </div>
-                        
+
+
                         {/* Request Builder */}
                         <RequestBuilder
                           key={`${selectedEndpoint.uri}-${selectedEndpoint.methods.join('-')}`}
@@ -115,10 +138,10 @@ export default function Spectra({ schemaUrl, executeUrl, cookiesUrl }: Props) {
                       </div>
                     )}
                   </div>
-                </ScrollArea>
+                </div>
               </div>
 
-              {/* Right Side - Response Viewer */}
+              {/* Right Side - Response Viewer (scrollable) */}
               <div className="flex-1 flex flex-col bg-card/30 backdrop-blur-sm overflow-hidden">
                 {response ? (
                   <ResponseViewer response={response} />
@@ -138,12 +161,12 @@ export default function Spectra({ schemaUrl, executeUrl, cookiesUrl }: Props) {
               </div>
             </div>
 
-            {/* Right Sidebar - Cookies & Collections */}
-            <aside className="w-64 border-l border-border/50 bg-card/30 backdrop-blur-sm flex flex-col">
-              <ScrollArea className="flex-1">
+            {/* Right Sidebar - Cookies & Collections (scrollable) */}
+            <aside className="w-64 border-l border-border/50 bg-card/30 backdrop-blur-sm flex flex-col overflow-hidden">
+              <div className="flex-1 overflow-y-auto">
                 {/* Cookies Section */}
                 <div className="border-b border-border/50">
-                  <div className="p-3 border-b border-border/50 bg-card/50">
+                  <div className="flex-none p-3 border-b border-border/50 bg-card/50">
                     <div className="flex items-center gap-2 mb-0.5">
                       <Cookie className="h-3.5 w-3.5 text-primary" />
                       <h2 className="text-xs font-semibold">Cookies</h2>
@@ -155,7 +178,7 @@ export default function Spectra({ schemaUrl, executeUrl, cookiesUrl }: Props) {
 
                 {/* Collections Section */}
                 <div>
-                  <div className="p-3 border-b border-border/50 bg-card/50">
+                  <div className="flex-none p-3 border-b border-border/50 bg-card/50">
                     <div className="flex items-center gap-2 mb-0.5">
                       <FolderOpen className="h-3.5 w-3.5 text-primary" />
                       <h2 className="text-xs font-semibold">Collections</h2>
@@ -166,7 +189,7 @@ export default function Spectra({ schemaUrl, executeUrl, cookiesUrl }: Props) {
                     <Collections />
                   </div>
                 </div>
-              </ScrollArea>
+              </div>
             </aside>
           </div>
         </div>

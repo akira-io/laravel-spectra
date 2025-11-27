@@ -11,14 +11,33 @@ export default function CookiePanel({ cookiesUrl }: Props) {
   const [cookies, setCookies] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    ky.get(cookiesUrl)
+  const loadCookies = () => {
+    setLoading(true);
+    ky.get(cookiesUrl, {
+      credentials: 'include',
+    })
       .json()
       .then((data: any) => {
-        setCookies(data.data || []);
+        // Without data wrapper, response is directly the array
+        setCookies(Array.isArray(data) ? data : (data.data || []));
         setLoading(false);
       })
       .catch(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    loadCookies();
+    
+    // Listen for cookie updates
+    const handleCookiesUpdated = () => {
+      setTimeout(loadCookies, 500); // Delay to allow cookies to be set
+    };
+    
+    window.addEventListener('spectra-cookies-updated', handleCookiesUpdated);
+    
+    return () => {
+      window.removeEventListener('spectra-cookies-updated', handleCookiesUpdated);
+    };
   }, [cookiesUrl]);
 
   if (loading) {

@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Badge } from './ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { PlayIcon, Loader2 } from 'lucide-react';
+import CodeEditor from './CodeEditor';
 
 interface Props {
   endpoint: any;
@@ -23,7 +24,10 @@ export default function RequestBuilder({ endpoint, executeUrl, onResponse }: Pro
     if (endpoint.body_parameters && Object.keys(endpoint.body_parameters).length > 0) {
       const bodyObj: Record<string, any> = {};
       Object.entries(endpoint.body_parameters).forEach(([key, meta]: [string, any]) => {
-        if (meta.type === 'integer') {
+        // Use Faker example if available, otherwise use default
+        if (meta.example !== undefined && meta.example !== null) {
+          bodyObj[key] = meta.example;
+        } else if (meta.type === 'integer') {
           bodyObj[key] = 0;
         } else if (meta.type === 'boolean') {
           bodyObj[key] = false;
@@ -48,10 +52,46 @@ export default function RequestBuilder({ endpoint, executeUrl, onResponse }: Pro
       const authMode = (window as any).spectraAuthMode || 'current';
       const authData = (window as any).spectraAuthData || {};
 
+      // Auto-login for Basic Auth to get token and cookies
+      if (authMode === 'basic' && authData.basic_user && authData.basic_pass) {
+        try {
+          const loginResponse = await ky.post('/api/auth/spectra-login', {
+            json: {
+              email: authData.basic_user,
+              password: authData.basic_pass,
+            },
+            credentials: 'include',
+          });
+
+          const loginResult = await loginResponse.json<any>();
+
+          if (loginResult.success && loginResult.token) {
+            // Auto-set Bearer token in headers
+            const updatedHeaders = {
+              ...headers,
+              'Authorization': `Bearer ${loginResult.token}`,
+            };
+            setHeaders(updatedHeaders);
+            
+            // Store token for future requests
+            (window as any).spectraToken = loginResult.token;
+            
+            // Show success message
+            console.log('✅ Auto-authenticated:', loginResult.user.name);
+            
+            // Trigger cookie panel refresh
+            window.dispatchEvent(new CustomEvent('spectra-cookies-updated'));
+          }
+        } catch (loginError) {
+          console.warn('Auto-login failed, continuing with Basic Auth');
+        }
+      }
+
       const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 
       const result = await ky
         .post(executeUrl, {
+          credentials: 'include', // Include cookies
           headers: {
             'X-CSRF-TOKEN': csrfToken || '',
           },
@@ -118,11 +158,12 @@ export default function RequestBuilder({ endpoint, executeUrl, onResponse }: Pro
 
           <TabsContent value="body" className="space-y-1.5 mt-3">
             <h3 className="text-xs font-semibold">Request Body (JSON)</h3>
-            <textarea
+            <CodeEditor
               value={body}
-              onChange={(e) => setBody(e.target.value)}
-              className="w-full px-2.5 py-2 text-xs border border-input rounded-md bg-background text-foreground font-mono focus:outline-none focus:ring-1 focus:ring-ring h-48 resize-none"
+              onChange={setBody}
+              language="json"
               placeholder='{"key": "value"}'
+              minHeight="300px"
             />
           </TabsContent>
 

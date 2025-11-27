@@ -4,9 +4,10 @@ import ky from 'ky';
 interface Props {
   schemaUrl: string;
   onSelect: (endpoint: any) => void;
+  selectedEndpoint?: any;
 }
 
-export default function EndpointTree({ schemaUrl, onSelect }: Props) {
+export default function EndpointTree({ schemaUrl, onSelect, selectedEndpoint }: Props) {
   const [routes, setRoutes] = useState<any[]>([]);
   const [filter, setFilter] = useState('');
   const [loading, setLoading] = useState(true);
@@ -18,8 +19,7 @@ export default function EndpointTree({ schemaUrl, onSelect }: Props) {
       .then((data: any) => {
         setRoutes(data.routes || []);
         setLoading(false);
-        
-        // Auto-expand all groups initially
+
         const allGroups = new Set<string>();
         (data.routes || []).forEach((route: any) => {
           let groupName = 'Other';
@@ -69,13 +69,12 @@ export default function EndpointTree({ schemaUrl, onSelect }: Props) {
   const groupedRoutes = filteredRoutes.reduce((acc, route) => {
     let groupName = 'Other';
 
-    // Try to get group from controller
     if (route.action && route.action !== 'Closure') {
       const controllerName = route.action.split('@')[0]?.split('\\').pop() || '';
       // Remove "Controller" suffix and use as group name
       groupName = controllerName.replace(/Controller$/, '') || 'Other';
     }
-    // If it's a closure, try to group by resource name from URI
+
     else {
       const uriParts = route.uri.split('/').filter(Boolean);
       
@@ -99,7 +98,7 @@ export default function EndpointTree({ schemaUrl, onSelect }: Props) {
     return acc;
   }, {} as Record<string, any[]>);
 
-  // Sort groups alphabetically, but keep 'Other' at the end
+
   const sortedGroups = Object.entries(groupedRoutes)
     .sort(([a], [b]) => {
       if (a === 'Other') return 1;
@@ -107,7 +106,7 @@ export default function EndpointTree({ schemaUrl, onSelect }: Props) {
       return a.localeCompare(b);
     })
     .map(([groupName, routes]) => {
-      // Sort routes within each group by URI
+
       const sortedRoutes = routes.sort((a, b) => {
         // First by base path (without parameters)
         const aBase = a.uri.replace(/\/\{[^}]+\}/g, '');
@@ -187,12 +186,21 @@ export default function EndpointTree({ schemaUrl, onSelect }: Props) {
             
             {isExpanded && (
               <div className="space-y-0.5 ml-2">
-                {routes.map((route, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => onSelect(route)}
-                    className="w-full text-left px-2 py-2 rounded-md hover:bg-white/5 transition-colors group"
-                  >
+                {routes.map((route, idx) => {
+                  const isActive = selectedEndpoint && 
+                    selectedEndpoint.uri === route.uri && 
+                    selectedEndpoint.methods.join(',') === route.methods.join(',');
+                  
+                  return (
+                    <button
+                      key={idx}
+                      onClick={() => onSelect(route)}
+                      className={`w-full text-left px-2 py-2 rounded-md transition-colors group ${
+                        isActive 
+                          ? 'bg-primary/20 border border-primary/50 shadow-sm' 
+                          : 'hover:bg-white/5'
+                      }`}
+                    >
                     <div className="flex gap-1.5 mb-1">
                       {route.methods
                         .filter((m: string) => !['HEAD', 'OPTIONS'].includes(m))
@@ -222,7 +230,8 @@ export default function EndpointTree({ schemaUrl, onSelect }: Props) {
                       </div>
                     )}
                   </button>
-                ))}
+                );
+              })}
               </div>
             )}
           </div>
