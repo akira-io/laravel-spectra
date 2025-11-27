@@ -91,7 +91,7 @@ final readonly class BodyParameterExtractor
                     $rules = $instance->rules();
 
                     foreach ($rules as $field => $rule) {
-                        $ruleString = is_array($rule) ? implode('|', $rule) : $rule;
+                        $ruleString = $this->normalizeRule($rule);
                         $parameters[$field] = [
                             'type' => $this->inferType($ruleString),
                             'required' => $this->isRequired($ruleString),
@@ -141,9 +141,25 @@ final readonly class BodyParameterExtractor
         return str_contains($rules, 'required') && ! str_contains($rules, 'sometimes');
     }
 
+  
+    private function normalizeRule(mixed $rule): string
+    {
+        if (is_string($rule)) {
+            return $rule;
+        }
+
+        if (is_array($rule)) {
+            return implode('|', array_map($this->normalizeRule(...), $rule));
+        }
+
+        if (is_object($rule)) {
+            return (string) $rule;
+        }
+
+        return '';
+    }
+
     /**
-     * Extract from closure routes
-     *
      * @return array<string, array{type: string, required: bool, rules: string}>
      */
     private function extractFromClosure(Closure $closure): array
