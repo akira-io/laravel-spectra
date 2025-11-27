@@ -8,12 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-    
-    @if(isset($page['props']['assets']))
-        <link rel="stylesheet" href="{{ $page['props']['assets']['css'] }}">
-        <script type="module" src="{{ $page['props']['assets']['js'] }}"></script>
-    @endif
-    
+    @vite(['resources/css/app.css', 'resources/js/spectra/main.tsx'])
     @inertiaHead
 </head>
 <body>

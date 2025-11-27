@@ -5,20 +5,17 @@ import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
   plugins: [
+    laravel({
+      input: [
+        'resources/css/app.css',
+        'resources/js/spectra/main.tsx',
+      ],
+      publicDirectory: 'public/build',
+      buildDirectory: 'vendor/spectra/build',
+    }),
     react(),
     tailwindcss(),
   ],
-  build: {
-    outDir: 'public/build',
-    emptyOutDir: true,
-    manifest: true,
-    rollupOptions: {
-      input: {
-        main: 'resources/js/spectra/main.tsx',
-        app: 'resources/css/app.css',
-      },
-    },
-  },
   resolve: {
     alias: {
       '@': '/resources/js/spectra',
