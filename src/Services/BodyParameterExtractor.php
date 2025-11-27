@@ -97,6 +97,16 @@ final readonly class BodyParameterExtractor
                             'required' => $this->isRequired($ruleString),
                             'rules' => $ruleString,
                         ];
+
+                        // Auto-add confirmation field if rule has 'confirmed'
+                        if (str_contains(mb_strtolower($ruleString), 'confirmed')) {
+                            $confirmationField = $field . '_confirmation';
+                            $parameters[$confirmationField] = [
+                                'type' => $this->inferType($ruleString),
+                                'required' => $this->isRequired($ruleString),
+                                'rules' => $ruleString,
+                            ];
+                        }
                     }
                 }
             } catch (Exception $e) {
@@ -141,7 +151,6 @@ final readonly class BodyParameterExtractor
         return str_contains($rules, 'required') && ! str_contains($rules, 'sometimes');
     }
 
-  
     private function normalizeRule(mixed $rule): string
     {
         if (is_string($rule)) {
@@ -153,7 +162,14 @@ final readonly class BodyParameterExtractor
         }
 
         if (is_object($rule)) {
-            return (string) $rule;
+            // Try to get string representation
+            if (method_exists($rule, '__toString')) {
+                return (string) $rule;
+            }
+
+            // For rule objects without __toString, extract class name
+            $className = class_basename($rule::class);
+            return mb_strtolower(str_replace('Rule', '', $className));
         }
 
         return '';
