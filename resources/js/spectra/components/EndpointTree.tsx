@@ -183,22 +183,26 @@ export default function EndpointTree({ schemaUrl, onSelect, selectedEndpoint }: 
                     <div className="flex gap-1.5 mb-1">
                       {route.methods
                         .filter((m: string) => !['HEAD', 'OPTIONS'].includes(m))
-                        .map((method: string) => (
-                          <span
-                            key={method}
-                            className={`text-xs px-1.5 py-0.5 rounded font-mono font-semibold ${
-                              method === 'GET'
-                                ? 'bg-blue-500/20 text-blue-400'
-                                : method === 'POST'
-                                ? 'bg-green-500/20 text-green-400'
-                                : method === 'PUT' || method === 'PATCH'
-                                ? 'bg-yellow-500/20 text-yellow-400'
-                                : 'bg-red-500/20 text-red-400'
-                            }`}
-                          >
-                            {method}
-                          </span>
-                        ))}
+                        .map((method: string) => {
+                          const getMethodColor = (m: string) => {
+                            const colors: Record<string, string> = {
+                              'GET': 'bg-emerald-500/20 text-emerald-400',
+                              'POST': 'bg-blue-500/20 text-blue-400',
+                              'PUT': 'bg-amber-500/20 text-amber-400',
+                              'PATCH': 'bg-orange-500/20 text-orange-400',
+                              'DELETE': 'bg-red-500/20 text-red-400',
+                            };
+                            return colors[m] || 'bg-gray-500/20 text-gray-400';
+                          };
+                          return (
+                            <span
+                              key={method}
+                              className={`text-xs px-1.5 py-0.5 rounded font-mono font-semibold ${getMethodColor(method)}`}
+                            >
+                              {method}
+                            </span>
+                          );
+                        })}
                     </div>
                     <div className="font-mono text-xs text-gray-400 group-hover:text-gray-300 transition-colors">
                       {route.uri}

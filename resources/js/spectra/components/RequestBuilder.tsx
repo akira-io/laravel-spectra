@@ -7,14 +7,16 @@ import { Badge } from './ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { PlayIcon, Loader2 } from 'lucide-react';
 import CodeEditor from './CodeEditor';
+import CookiePanel from './CookiePanel';
 
 interface Props {
   endpoint: any;
   executeUrl: string;
   onResponse: (response: any) => void;
+  cookiesUrl?: string;
 }
 
-export default function RequestBuilder({ endpoint, executeUrl, onResponse }: Props) {
+export default function RequestBuilder({ endpoint, executeUrl, onResponse, cookiesUrl }: Props) {
   const [method, setMethod] = useState(endpoint.methods.filter((m: string) => !['HEAD', 'OPTIONS'].includes(m))[0]);
   const [pathParams, setPathParams] = useState<Record<string, string>>({});
   const [query, setQuery] = useState<Record<string, string>>({});
@@ -150,10 +152,11 @@ export default function RequestBuilder({ endpoint, executeUrl, onResponse }: Pro
       </CardHeader>
       <CardContent className="space-y-3 pt-0">
         <Tabs defaultValue="body" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 h-8">
+          <TabsList className="grid w-full grid-cols-4 h-8">
             <TabsTrigger value="body" disabled={['GET', 'HEAD'].includes(method)} className="text-xs">Body</TabsTrigger>
             <TabsTrigger value="params" className="text-xs">Params</TabsTrigger>
             <TabsTrigger value="headers" className="text-xs">Headers</TabsTrigger>
+            <TabsTrigger value="cookies" className="text-xs">Cookies</TabsTrigger>
           </TabsList>
 
           <TabsContent value="body" className="space-y-1.5 mt-3">
@@ -218,6 +221,16 @@ export default function RequestBuilder({ endpoint, executeUrl, onResponse }: Pro
               }}
               className="w-full px-2.5 py-2 text-xs border border-input rounded-md bg-background text-foreground font-mono focus:outline-none focus:ring-1 focus:ring-ring h-32 resize-none"
             />
+          </TabsContent>
+
+          <TabsContent value="cookies" className="space-y-1.5 mt-3">
+            {cookiesUrl ? (
+              <CookiePanel cookiesUrl={cookiesUrl} />
+            ) : (
+              <div className="text-center py-6 text-muted-foreground text-xs">
+                Cookies URL not configured
+              </div>
+            )}
           </TabsContent>
         </Tabs>
 

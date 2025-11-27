@@ -7,7 +7,8 @@ import ResponseViewer from '../components/ResponseViewer';
 import CookiePanel from '../components/CookiePanel';
 import Collections from '../components/Collections';
 import { Button } from '../components/ui/button';
-import { Sun, Moon, Zap, Cookie, FolderTree, Layout, Shield, FolderOpen } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../components/ui/dialog';
+import { Sun, Moon, Zap, Cookie, FolderTree, Layout, Shield, FolderOpen, Save, Share2 } from 'lucide-react';
 
 interface Props {
   schemaUrl: string;
@@ -19,6 +20,7 @@ export default function Spectra({ schemaUrl, executeUrl, cookiesUrl }: Props) {
   const [selectedEndpoint, setSelectedEndpoint] = useState<any>(null);
   const [response, setResponse] = useState<any>(null);
   const [darkMode, setDarkMode] = useState(true);
+  const [showCollectionsModal, setShowCollectionsModal] = useState(false);
 
   const handleEndpointSelect = (endpoint: any) => {
     setSelectedEndpoint(endpoint);
@@ -84,11 +86,21 @@ export default function Spectra({ schemaUrl, executeUrl, cookiesUrl }: Props) {
           {/* Fixed Layout Container */}
           <div className="flex-1 flex overflow-hidden">
             {/* Left Sidebar - Endpoints (Fixed with scrollable content) */}
-            <aside className="w-64 border-r border-border/50 bg-card/30 backdrop-blur-sm flex flex-col">
+            <aside className="w-80 border-r border-border/50 bg-card/30 backdrop-blur-sm flex flex-col">
               <div className="flex-none p-3 border-b border-border/50 bg-card/50">
-                <div className="flex items-center gap-2 mb-0.5">
-                  <FolderTree className="h-3.5 w-3.5 text-primary" />
-                  <h2 className="text-xs font-semibold">Endpoints</h2>
+                <div className="flex items-center justify-between gap-2 mb-0.5">
+                  <div className="flex items-center gap-2">
+                    <FolderTree className="h-3.5 w-3.5 text-primary" />
+                    <h2 className="text-xs font-semibold">Endpoints</h2>
+                  </div>
+                  <Button
+                    onClick={() => setShowCollectionsModal(true)}
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6 text-primary hover:text-primary hover:bg-primary/10"
+                  >
+                    <Save className="h-3.5 w-3.5" />
+                  </Button>
                 </div>
                 <p className="text-[10px] text-muted-foreground">Browse routes</p>
               </div>
@@ -105,16 +117,14 @@ export default function Spectra({ schemaUrl, executeUrl, cookiesUrl }: Props) {
 
             {/* Main Content Area - Split Request/Response */}
             <div className="flex-1 flex overflow-hidden">
-              {/* Left Side - Request Builder (scrollable) */}
+              {/* Center - Request Builder (scrollable) */}
               <div className="flex-1 flex flex-col border-r border-border/50 bg-background/50 overflow-hidden">
                 <div className="flex-1 overflow-y-auto">
                   <div className="p-4 space-y-4">
                     {selectedEndpoint ? (
                       <>
                         {/* Auth Section Compact */}
-
-                          <AuthPanel />
-
+                        <AuthPanel />
 
                         {/* Request Builder */}
                         <RequestBuilder
@@ -122,6 +132,7 @@ export default function Spectra({ schemaUrl, executeUrl, cookiesUrl }: Props) {
                           endpoint={selectedEndpoint}
                           executeUrl={executeUrl}
                           onResponse={setResponse}
+                          cookiesUrl={cookiesUrl}
                         />
                       </>
                     ) : (
@@ -160,39 +171,26 @@ export default function Spectra({ schemaUrl, executeUrl, cookiesUrl }: Props) {
                 )}
               </div>
             </div>
-
-            {/* Right Sidebar - Cookies & Collections (scrollable) */}
-            <aside className="w-64 border-l border-border/50 bg-card/30 backdrop-blur-sm flex flex-col overflow-hidden">
-              <div className="flex-1 overflow-y-auto">
-                {/* Cookies Section */}
-                <div className="border-b border-border/50">
-                  <div className="flex-none p-3 border-b border-border/50 bg-card/50">
-                    <div className="flex items-center gap-2 mb-0.5">
-                      <Cookie className="h-3.5 w-3.5 text-primary" />
-                      <h2 className="text-xs font-semibold">Cookies</h2>
-                    </div>
-                    <p className="text-[10px] text-muted-foreground">Request cookies</p>
-                  </div>
-                  <CookiePanel cookiesUrl={cookiesUrl} />
-                </div>
-
-                {/* Collections Section */}
-                <div>
-                  <div className="flex-none p-3 border-b border-border/50 bg-card/50">
-                    <div className="flex items-center gap-2 mb-0.5">
-                      <FolderOpen className="h-3.5 w-3.5 text-primary" />
-                      <h2 className="text-xs font-semibold">Collections</h2>
-                    </div>
-                    <p className="text-[10px] text-muted-foreground">Save & load configs</p>
-                  </div>
-                  <div className="p-3">
-                    <Collections />
-                  </div>
-                </div>
-              </div>
-            </aside>
           </div>
         </div>
+
+        {/* Collections Modal */}
+        <Dialog open={showCollectionsModal} onOpenChange={setShowCollectionsModal}>
+          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="text-base">
+                <FolderOpen className="h-5 w-5" />
+                Collections
+              </DialogTitle>
+              <DialogDescription>
+                Manage and organize your API request collections
+              </DialogDescription>
+            </DialogHeader>
+            <div className="py-4">
+              <Collections />
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </>
   );
