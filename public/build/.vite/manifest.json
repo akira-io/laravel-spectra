@@ -1,0 +1,13 @@
+{
+  "resources/css/app.css": {
+    "file": "assets/app-CVox5wP3.css",
+    "src": "resources/css/app.css",
+    "isEntry": true
+  },
+  "resources/js/spectra/main.tsx": {
+    "file": "assets/main-1-OvQA8l.js",
+    "name": "main",
+    "src": "resources/js/spectra/main.tsx",
+    "isEntry": true
+  }
+}
