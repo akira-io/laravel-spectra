@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [0.2.0](///compare/v0.1.0...v0.2.0) (2025-11-27)
+
+### Features
+
+* add GitHub Actions workflows for Discord release notifications and testing caa8ac8
+* add manifest file and update .gitignore to include build artifacts bdf51f8
+* enhance code quality with strict types, improved error handling, and Vite asset integration 5e05bac
+* implement dynamic asset loading and update Vite configuration for improved build management 8b6f6f2
+* update build configuration and enhance asset management with Vite integration a2d43dc
+
 ## 0.1.0 (2025-11-27)
 
 ### Features
