@@ -23,26 +23,36 @@ export default function EndpointTree({ schemaUrl, onSelect, selectedEndpoint }: 
         const allGroups = new Set<string>();
         (data.routes || []).forEach((route: any) => {
           let groupName = 'Other';
-          
-          if (route.action && route.action !== 'Closure') {
-            const controllerName = route.action.split('@')[0]?.split('\\').pop() || '';
-            groupName = controllerName.replace(/Controller$/, '') || 'Other';
-          } else {
-            const uriParts = route.uri.split('/').filter(Boolean);
-            
-            for (const part of uriParts) {
-              if (!part.startsWith('{') && !part.endsWith('}')) {
-                if (!['api', 'admin', 'v1', 'v2', 'v3', 'web'].includes(part.toLowerCase())) {
-                  groupName = part
-                    .split('-')
-                    .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
-                    .join(' ');
-                  break;
-                }
+
+          // First, try to extract group from URI path (e.g., api/auth/login -> Auth)
+          const uriParts = route.uri.split('/').filter(Boolean);
+
+          // Look for the first meaningful segment that's not a common prefix or parameter
+          for (let i = 0; i < uriParts.length; i++) {
+            const part = uriParts[i];
+
+            if (!part.startsWith('{') && !part.endsWith('}')) {
+              // Skip common prefixes like 'api', 'admin', 'v1', etc
+              if (!['api', 'admin', 'v1', 'v2', 'v3', 'web'].includes(part.toLowerCase())) {
+                groupName = part
+                  .split('-')
+                  .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
+                  .join(' ');
+                break;
               }
             }
           }
-          
+
+          // If still "Other" and we have a controller, try to use it as secondary fallback
+          if (groupName === 'Other' && route.action && route.action !== 'Closure') {
+            const controllerName = route.action.split('@')[0]?.split('\\').pop() || '';
+            const cleanName = controllerName.replace(/Controller$/, '') || 'Other';
+            // Only use controller name if it's not the same as a URI part
+            if (!uriParts.some(part => part.toLowerCase() === cleanName.toLowerCase())) {
+              groupName = cleanName;
+            }
+          }
+
           allGroups.add(groupName);
         });
         setExpandedGroups(allGroups);
@@ -69,27 +79,32 @@ export default function EndpointTree({ schemaUrl, onSelect, selectedEndpoint }: 
   const groupedRoutes = filteredRoutes.reduce((acc, route) => {
     let groupName = 'Other';
 
-    if (route.action && route.action !== 'Closure') {
-      const controllerName = route.action.split('@')[0]?.split('\\').pop() || '';
-      // Remove "Controller" suffix and use as group name
-      groupName = controllerName.replace(/Controller$/, '') || 'Other';
+    // First, try to extract group from URI path (e.g., api/auth/login -> Auth)
+    const uriParts = route.uri.split('/').filter(Boolean);
+
+    // Look for the first meaningful segment that's not a common prefix or parameter
+    for (let i = 0; i < uriParts.length; i++) {
+      const part = uriParts[i];
+
+      if (!part.startsWith('{') && !part.endsWith('}')) {
+        // Skip common prefixes like 'api', 'admin', 'v1', etc
+        if (!['api', 'admin', 'v1', 'v2', 'v3', 'web'].includes(part.toLowerCase())) {
+          groupName = part
+            .split('-')
+            .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(' ');
+          break;
+        }
+      }
     }
 
-    else {
-      const uriParts = route.uri.split('/').filter(Boolean);
-      
-      // Find the resource name (first non-parameter segment)
-      for (const part of uriParts) {
-        if (!part.startsWith('{') && !part.endsWith('}')) {
-          // Remove common prefixes like 'api', 'admin', 'v1', etc
-          if (!['api', 'admin', 'v1', 'v2', 'v3', 'web'].includes(part.toLowerCase())) {
-            groupName = part
-              .split('-')
-              .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-              .join(' ');
-            break;
-          }
-        }
+    // If still "Other" and we have a controller, try to use it as secondary fallback
+    if (groupName === 'Other' && route.action && route.action !== 'Closure') {
+      const controllerName = route.action.split('@')[0]?.split('\\').pop() || '';
+      const cleanName = controllerName.replace(/Controller$/, '') || 'Other';
+      // Only use controller name if it's not the same as a URI part
+      if (!uriParts.some(part => part.toLowerCase() === cleanName.toLowerCase())) {
+        groupName = cleanName;
       }
     }
 
