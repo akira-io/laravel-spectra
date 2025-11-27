@@ -67,7 +67,7 @@ final readonly class RequestProxy
 
         $duration = (int) ((microtime(true) - $start) * 1000);
         $content = $response->getContent();
-        $size = strlen($content ?: '');
+        $size = mb_strlen($content ?: '');
 
         return new ExecuteResult(
             status: $response->getStatusCode(),
@@ -84,9 +84,7 @@ final readonly class RequestProxy
         $maxAttempts = config('spectra.rate_limit.max', 60);
         $decayMinutes = config('spectra.rate_limit.per_minutes', 1);
 
-        if (RateLimiter::tooManyAttempts($key, $maxAttempts)) {
-            abort(429, 'Too many requests');
-        }
+        abort_if(RateLimiter::tooManyAttempts($key, $maxAttempts), 429, 'Too many requests');
 
         RateLimiter::hit($key, $decayMinutes * 60);
     }
@@ -116,7 +114,7 @@ final readonly class RequestProxy
 
         return array_filter(
             $headers,
-            fn ($key) => ! in_array(strtolower($key), $stripHeaders),
+            fn ($key) => ! in_array(mb_strtolower($key), $stripHeaders),
             ARRAY_FILTER_USE_KEY
         );
     }
@@ -130,7 +128,7 @@ final readonly class RequestProxy
         $server = [];
 
         foreach ($headers as $key => $value) {
-            $key = strtoupper(str_replace('-', '_', $key));
+            $key = mb_strtoupper(str_replace('-', '_', $key));
             $server['HTTP_'.$key] = $value;
         }
 
@@ -181,7 +179,7 @@ final readonly class RequestProxy
     private function recursiveMask(array $data, array $maskFields): array
     {
         foreach ($data as $key => $value) {
-            if (in_array(strtolower((string) $key), $maskFields)) {
+            if (in_array(mb_strtolower((string) $key), $maskFields)) {
                 $data[$key] = '***MASKED***';
             } elseif (is_array($value)) {
                 $data[$key] = $this->recursiveMask($value, $maskFields);

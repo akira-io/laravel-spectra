@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Akira\Spectra\Services;
 
+use Exception;
 use Illuminate\Contracts\Encryption\Encrypter;
 
 final readonly class CookieInspector
@@ -44,7 +45,7 @@ final readonly class CookieInspector
     {
         try {
             return $this->encrypter->decrypt($value, false);
-        } catch (\Exception) {
+        } catch (Exception) {
             return $value;
         }
     }
@@ -55,7 +56,7 @@ final readonly class CookieInspector
             $this->encrypter->decrypt($value, false);
 
             return true;
-        } catch (\Exception) {
+        } catch (Exception) {
             return false;
         }
     }

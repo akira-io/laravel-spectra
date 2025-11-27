@@ -1,0 +1,73 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Called ''env'' outside of the config directory which returns null when the config is cached, use ''config''\.$#'
+			identifier: larastan.noEnvCallsOutsideOfConfig
+			count: 6
+			path: config/spectra.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Contracts\\Auth\\UserProvider\:\:getModel\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Services/AuthBroker.php
+
+		-
+			message: '#^Using nullsafe method call on non\-nullable type Illuminate\\Contracts\\Auth\\UserProvider\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: src/Services/AuthBroker.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Foundation\\Http\\FormRequest\:\:rules\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Services/BodyParameterExtractor.php
+
+		-
+			message: '#^Call to an undefined method ReflectionType\:\:getName\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Services/BodyParameterExtractor.php
+
+		-
+			message: '#^Call to an undefined method ReflectionType\:\:isBuiltin\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Services/BodyParameterExtractor.php
+
+		-
+			message: '#^Call to an undefined method Faker\\Generator\:\:state\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Services/FakerValueGenerator.php
+
+		-
+			message: '#^Argument of an invalid type Illuminate\\Routing\\RouteCollectionInterface supplied for foreach, only iterables are supported\.$#'
+			identifier: foreach.nonIterable
+			count: 1
+			path: src/Services/RouteScanner.php
+
+		-
+			message: '#^Call to an undefined method ReflectionType\:\:getName\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Services/SchemaBuilder.php
+
+		-
+			message: '#^Call to an undefined method ReflectionType\:\:isBuiltin\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Services/SchemaBuilder.php
+
+		-
+			message: '#^Property Akira\\Spectra\\Services\\SchemaBuilder\:\:\$validation is never read, only written\.$#'
+			identifier: property.onlyWritten
+			count: 1
+			path: src/Services/SchemaBuilder.php
+
+		-
+			message: '#^Call to an undefined static method Illuminate\\Support\\Facades\\Vite\:\:useBuildPath\(\)\.$#'
+			identifier: staticMethod.notFound
+			count: 1
+			path: src/SpectraServiceProvider.php

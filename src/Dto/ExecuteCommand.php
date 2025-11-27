@@ -32,7 +32,7 @@ final readonly class ExecuteCommand
     {
         return new self(
             endpoint: $data['endpoint'] ?? '',
-            method: strtoupper($data['method'] ?? 'GET'),
+            method: mb_strtoupper($data['method'] ?? 'GET'),
             pathParams: $data['path_params'] ?? [],
             query: $data['query'] ?? [],
             headers: $data['headers'] ?? [],

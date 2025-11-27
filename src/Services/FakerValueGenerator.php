@@ -22,8 +22,8 @@ final readonly class FakerValueGenerator
             return $this->getDefaultValue($type);
         }
 
-        $fieldLower = strtolower($fieldName);
-        $rulesLower = strtolower($rules);
+        $fieldLower = mb_strtolower($fieldName);
+        $rulesLower = mb_strtolower($rules);
 
         if (str_contains($rulesLower, 'email') || str_contains($fieldLower, 'email')) {
             return $this->faker->email();

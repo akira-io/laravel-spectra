@@ -4,8 +4,13 @@ declare(strict_types=1);
 
 namespace Akira\Spectra\Services;
 
+use Closure;
+use Exception;
 use Illuminate\Routing\Route;
 use ReflectionClass;
+use ReflectionException;
+use ReflectionFunction;
+use ReflectionFunctionAbstract;
 use ReflectionMethod;
 
 final readonly class BodyParameterExtractor
@@ -18,7 +23,7 @@ final readonly class BodyParameterExtractor
         $action = $route->getAction();
 
         if (! isset($action['controller'])) {
-            if (isset($action['uses']) && $action['uses'] instanceof \Closure) {
+            if (isset($action['uses']) && $action['uses'] instanceof Closure) {
                 return $this->extractFromClosure($action['uses']);
             }
 
@@ -47,7 +52,7 @@ final readonly class BodyParameterExtractor
                 return $parameters;
             }
 
-        } catch (\ReflectionException $e) {
+        } catch (ReflectionException $e) {
             return [];
         }
 
@@ -94,7 +99,7 @@ final readonly class BodyParameterExtractor
                         ];
                     }
                 }
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 continue;
             }
         }
@@ -104,7 +109,7 @@ final readonly class BodyParameterExtractor
 
     private function inferType(string $rules): string
     {
-        $rules = strtolower($rules);
+        $rules = mb_strtolower($rules);
 
         if (str_contains($rules, 'integer') || str_contains($rules, 'numeric')) {
             return 'integer';
@@ -131,7 +136,7 @@ final readonly class BodyParameterExtractor
 
     private function isRequired(string $rules): bool
     {
-        $rules = strtolower($rules);
+        $rules = mb_strtolower($rules);
 
         return str_contains($rules, 'required') && ! str_contains($rules, 'sometimes');
     }
@@ -141,13 +146,13 @@ final readonly class BodyParameterExtractor
      *
      * @return array<string, array{type: string, required: bool, rules: string}>
      */
-    private function extractFromClosure(\Closure $closure): array
+    private function extractFromClosure(Closure $closure): array
     {
         try {
-            $reflection = new \ReflectionFunction($closure);
+            $reflection = new ReflectionFunction($closure);
 
             return $this->extractFromMethodBody($reflection);
-        } catch (\ReflectionException $e) {
+        } catch (ReflectionException $e) {
             return [];
         }
     }
@@ -157,7 +162,7 @@ final readonly class BodyParameterExtractor
      *
      * @return array<string, array{type: string, required: bool, rules: string}>
      */
-    private function extractFromMethodBody(\ReflectionFunctionAbstract $reflection): array
+    private function extractFromMethodBody(ReflectionFunctionAbstract $reflection): array
     {
         $parameters = [];
 
@@ -221,7 +226,7 @@ final readonly class BodyParameterExtractor
                     }
                 }
             }
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return [];
         }
 

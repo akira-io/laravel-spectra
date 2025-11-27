@@ -1,12 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Akira\Spectra\Tests;
 
 use Akira\Spectra\SpectraServiceProvider;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Orchestra\Testbench\TestCase as Orchestra;
 
-class TestCase extends Orchestra
+abstract class TestCase extends Orchestra
 {
     protected function setUp(): void
     {
@@ -17,14 +19,7 @@ class TestCase extends Orchestra
         );
     }
 
-    protected function getPackageProviders($app)
-    {
-        return [
-            SpectraServiceProvider::class,
-        ];
-    }
-
-    public function getEnvironmentSetUp($app)
+    final public function getEnvironmentSetUp($app)
     {
         config()->set('database.default', 'testing');
 
@@ -33,5 +28,12 @@ class TestCase extends Orchestra
             (include $migration->getRealPath())->up();
          }
          */
+    }
+
+    protected function getPackageProviders($app)
+    {
+        return [
+            SpectraServiceProvider::class,
+        ];
     }
 }

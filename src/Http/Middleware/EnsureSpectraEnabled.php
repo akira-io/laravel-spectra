@@ -11,13 +11,9 @@ final readonly class EnsureSpectraEnabled
 {
     public function handle(Request $request, Closure $next): mixed
     {
-        if (! config('spectra.enabled')) {
-            abort(404);
-        }
+        abort_unless(config('spectra.enabled'), 404);
 
-        if (config('spectra.only_local') && ! app()->isLocal()) {
-            abort(404);
-        }
+        abort_if(config('spectra.only_local') && ! app()->isLocal(), 404);
 
         return $next($request);
     }

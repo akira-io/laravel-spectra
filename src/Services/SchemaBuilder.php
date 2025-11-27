@@ -10,6 +10,7 @@ use Illuminate\Contracts\Validation\Factory as ValidationFactory;
 use Illuminate\Routing\Router;
 use Illuminate\Support\Str;
 use ReflectionClass;
+use ReflectionException;
 
 final readonly class SchemaBuilder
 {
@@ -96,7 +97,7 @@ final readonly class SchemaBuilder
                     return $formRequest->rules();
                 }
             }
-        } catch (\ReflectionException) {
+        } catch (ReflectionException) {
             return [];
         }
 
@@ -331,6 +332,6 @@ final readonly class SchemaBuilder
 
     private function makeKey(string $identifier, string $method): string
     {
-        return sprintf('%s::%s', $identifier, strtoupper($method));
+        return sprintf('%s::%s', $identifier, mb_strtoupper($method));
     }
 }
