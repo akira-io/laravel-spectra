@@ -204,13 +204,15 @@ export default function RequestBuilder({ endpoint, executeUrl, onResponse, cooki
         }, 300); // Small delay to see the success first
       }
     } catch (error: any) {
-      onResponse({
+      const errorResponse = {
         status: error.response?.status || 500,
         body: { error: error.message },
         time_ms: 0,
         size_bytes: 0,
         headers: {},
-      });
+      };
+      onResponse(errorResponse);
+      recordRequest(errorResponse.status, errorResponse.time_ms);
     } finally {
       setLoading(false);
     }

@@ -10,8 +10,11 @@ interface ResponseHistoryItem {
 interface Metrics {
   totalRequests: number;
   successfulRequests: number;
+  clientErrors: number;
+  serverErrors: number;
   responseTimes: number[];
   lastRequestTime: number | null;
+  requestHistory: any[];
 }
 
 interface NavigationState {
@@ -83,19 +86,37 @@ export const useNavigationStore = create<NavigationState>()(
       metrics: {
         totalRequests: 0,
         successfulRequests: 0,
+        clientErrors: 0,
+        serverErrors: 0,
         responseTimes: [],
+        requestHistory: [],
         lastRequestTime: null,
       },
       recordRequest: (status, timeMs) =>
         set((state) => {
           const isSuccess = status >= 200 && status < 300;
-          const newResponseTimes = [...state.metrics.responseTimes, timeMs].slice(-20); // Keep last 20
-          
+          const isClientError = status >= 400 && status < 500;
+          const isServerError = status >= 500;
+          const newResponseTimes = [...state.metrics.responseTimes, timeMs].slice(-20);
+
+          const newRequestHistoryItem = {
+            method: state.selectedEndpoint?.method || 'GET',
+            url: state.selectedEndpoint?.uri || '',
+            status,
+            responseTime: timeMs,
+            timestamp: Date.now(),
+          };
+
+          const newRequestHistory = [...state.metrics.requestHistory, newRequestHistoryItem].slice(-50);
+
           return {
             metrics: {
               totalRequests: state.metrics.totalRequests + 1,
               successfulRequests: state.metrics.successfulRequests + (isSuccess ? 1 : 0),
+              clientErrors: state.metrics.clientErrors + (isClientError ? 1 : 0),
+              serverErrors: state.metrics.serverErrors + (isServerError ? 1 : 0),
               responseTimes: newResponseTimes,
+              requestHistory: newRequestHistory,
               lastRequestTime: Date.now(),
             },
           };
@@ -105,7 +126,10 @@ export const useNavigationStore = create<NavigationState>()(
           metrics: {
             totalRequests: 0,
             successfulRequests: 0,
+            clientErrors: 0,
+            serverErrors: 0,
             responseTimes: [],
+            requestHistory: [],
             lastRequestTime: null,
           },
         }),
@@ -131,6 +155,10 @@ export const useNavigationStore = create<NavigationState>()(
                 ...parsed.state,
                 expandedGroups: new Set(parsed.state.expandedGroups || []),
                 responseHistory: parsed.state.responseHistory || {},
+                metrics: {
+                  ...parsed.state.metrics,
+                  requestHistory: Array.isArray(parsed.state.metrics?.requestHistory) ? parsed.state.metrics.requestHistory : [],
+                },
               },
               version: parsed.version,
             };

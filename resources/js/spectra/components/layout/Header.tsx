@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Button } from '../ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
-import { Sun, Moon, Zap, Activity, CheckCircle2, Zap as ZapIcon, Database, HardDrive, Cpu } from 'lucide-react';
+import { Sun, Moon, Zap, Activity, CheckCircle2, Zap as ZapIcon, Database, HardDrive, Cpu, BarChart3 } from 'lucide-react';
 import { useNavigationStore } from '../../stores/navigationStore';
+import MetricsModal from './MetricsModal';
 import ky from 'ky';
 
 interface HeaderProps {
@@ -34,6 +35,7 @@ export default function Header({ darkMode, onDarkModeToggle, onCollectionsClick,
   
   const metrics = useNavigationStore((state) => state.metrics);
   const [systemMetrics, setSystemMetrics] = useState<SystemMetrics | null>(null);
+  const [showMetricsModal, setShowMetricsModal] = useState(false);
   
   // Fetch system metrics
   useEffect(() => {
@@ -113,47 +115,47 @@ export default function Header({ darkMode, onDarkModeToggle, onCollectionsClick,
       
       {metrics.totalRequests > 0 && (
         <TooltipProvider>
-          <div className="hidden lg:flex items-center gap-4 px-4 py-1.5 rounded-lg bg-muted/30 border border-border/50">
+          <div className="hidden lg:flex items-center gap-4 px-4 py-1.5 rounded-lg bg-muted/30 border border-border/50 cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => setShowMetricsModal(true)}>
             <Tooltip>
               <TooltipTrigger asChild>
-                <div className="flex items-center gap-1.5 cursor-help">
+                <div className="flex items-center gap-1.5">
                   <Activity className="h-3.5 w-3.5 text-blue-500" />
                   <span className="text-xs font-medium">{metrics.totalRequests}</span>
                   <span className="text-[10px] text-muted-foreground">requests</span>
                 </div>
               </TooltipTrigger>
               <TooltipContent>
-                <p className="text-xs">Total requests executed in this session</p>
+                <p className="text-xs">Click to view detailed metrics</p>
               </TooltipContent>
             </Tooltip>
-            
+
             <div className="h-3 w-px bg-border" />
-            
+
             <Tooltip>
               <TooltipTrigger asChild>
-                <div className="flex items-center gap-1.5 cursor-help">
+                <div className="flex items-center gap-1.5">
                   <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
                   <span className="text-xs font-medium">{successRate}%</span>
                   <span className="text-[10px] text-muted-foreground">success</span>
                 </div>
               </TooltipTrigger>
               <TooltipContent>
-                <p className="text-xs">{metrics.successfulRequests} of {metrics.totalRequests} requests succeeded (2xx status)</p>
+                <p className="text-xs">Click to view detailed metrics</p>
               </TooltipContent>
             </Tooltip>
-            
+
             <div className="h-3 w-px bg-border" />
-            
+
             <Tooltip>
               <TooltipTrigger asChild>
-                <div className="flex items-center gap-1.5 cursor-help">
+                <div className="flex items-center gap-1.5">
                   <ZapIcon className="h-3.5 w-3.5 text-amber-500" />
                   <span className="text-xs font-medium">{avgResponseTime}ms</span>
                   <span className="text-[10px] text-muted-foreground">avg</span>
                 </div>
               </TooltipTrigger>
               <TooltipContent>
-                <p className="text-xs">Average response time (last 20 requests)</p>
+                <p className="text-xs">Click to view detailed metrics</p>
               </TooltipContent>
             </Tooltip>
           </div>
@@ -222,6 +224,17 @@ export default function Header({ darkMode, onDarkModeToggle, onCollectionsClick,
       )}
       
       <div className="flex items-center gap-2">
+        {metrics.totalRequests > 0 && (
+          <Button
+            onClick={() => setShowMetricsModal(true)}
+            variant="outline"
+            size="icon"
+            className="rounded-lg"
+            title="View development metrics"
+          >
+            <BarChart3 className="h-4 w-4" />
+          </Button>
+        )}
         <Button
           onClick={onDarkModeToggle}
           variant="outline"
@@ -235,6 +248,8 @@ export default function Header({ darkMode, onDarkModeToggle, onCollectionsClick,
           )}
         </Button>
       </div>
+
+      <MetricsModal open={showMetricsModal} onOpenChange={setShowMetricsModal} />
     </header>
   );
 }
