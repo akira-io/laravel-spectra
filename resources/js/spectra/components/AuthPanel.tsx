@@ -47,24 +47,31 @@ export default function AuthPanel() {
   ];
 
   return (
-    <div className="space-y-3">
-      <div className="grid grid-cols-2 gap-1.5">
-        {authModes.map((authMode) => {
-          const Icon = authMode.icon;
-          const isActive = mode === authMode.value;
-          return (
-            <Button
-              key={authMode.value}
-              onClick={() => handleModeChange(authMode.value)}
-              variant={isActive ? "default" : "outline"}
-              size="sm"
-              className={`h-8 text-xs ${isActive ? 'gradient-primary' : ''}`}
-            >
-              <Icon className="h-3 w-3 mr-1.5" />
-              {authMode.label.split(' ')[0]}
-            </Button>
-          );
-        })}
+    <div className="space-y-4">
+      {/* Auth Mode Selector - Segmented Control Style */}
+      <div className="space-y-2">
+        <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Authentication</label>
+        <div className="inline-flex h-10 rounded-lg bg-muted p-1 w-full">
+          {authModes.map((authMode) => {
+            const Icon = authMode.icon;
+            const isActive = mode === authMode.value;
+            return (
+              <button
+                key={authMode.value}
+                onClick={() => handleModeChange(authMode.value)}
+                className={`flex-1 flex items-center justify-center gap-2 rounded-md text-xs font-medium transition-all ${
+                  isActive
+                    ? 'bg-primary text-primary-foreground shadow-sm gradient-primary'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <Icon className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">{authMode.label}</span>
+                <span className="sm:hidden">{authMode.label.split(' ')[0]}</span>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {mode === 'impersonate' && (
