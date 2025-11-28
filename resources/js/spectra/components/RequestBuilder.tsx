@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import ky from 'ky';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -110,6 +110,21 @@ export default function RequestBuilder({ endpoint, executeUrl, onResponse, cooki
   
   const [body, setBody] = useState(initializeBody());
   const [loading, setLoading] = useState(false);
+
+  // Keyboard shortcut for execute
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+        e.preventDefault();
+        if (!loading) {
+          handleExecute();
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [loading, body, pathParams, query, headers, method]);
 
   const handleExecute = async () => {
     setLoading(true);
@@ -460,7 +475,7 @@ export default function RequestBuilder({ endpoint, executeUrl, onResponse, cooki
         <Button
           onClick={handleExecute}
           disabled={loading}
-          className="w-full gradient-primary text-white font-semibold shine-effect h-9"
+          className="w-full gradient-primary text-white font-semibold shine-effect h-9 relative"
         >
           {loading ? (
             <>
@@ -471,6 +486,7 @@ export default function RequestBuilder({ endpoint, executeUrl, onResponse, cooki
             <>
               <PlayIcon className="mr-2 h-3.5 w-3.5" />
               Execute Request
+              <span className="absolute right-3 text-[10px] font-normal opacity-60">⌘↵</span>
             </>
           )}
         </Button>
