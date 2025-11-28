@@ -161,15 +161,18 @@ export default function EndpointTree({ schemaUrl, onSelect, selectedEndpoint }: 
                     selectedEndpoint.methods.join(',') === route.methods.join(',');
                   
                   return (
-                    <button
-                      key={idx}
-                      onClick={() => onSelect(route)}
-                      className={`w-full text-left px-2 py-2 rounded-md transition-colors group ${
-                        isActive 
-                          ? 'bg-white/10 border border-white/20' 
-                          : 'hover:bg-white/5'
-                      }`}
-                    >
+                    <div key={idx}>
+                      {idx > 0 && (
+                        <div className="h-px bg-white/5 my-1.5" />
+                      )}
+                      <button
+                        onClick={() => onSelect(route)}
+                        className={`w-full text-left px-2 py-2 rounded-md transition-colors group ${
+                          isActive 
+                            ? 'bg-white/10 border border-white/20' 
+                            : 'hover:bg-white/5'
+                        }`}
+                      >
                     <div className="flex gap-1.5 mb-1 items-center flex-wrap">
                       {route.methods
                         .filter((m: string) => !['HEAD', 'OPTIONS'].includes(m))
@@ -235,9 +238,10 @@ export default function EndpointTree({ schemaUrl, onSelect, selectedEndpoint }: 
                         {route.name}
                       </div>
                     )}
-                  </button>
-                );
-              })}
+                      </button>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
