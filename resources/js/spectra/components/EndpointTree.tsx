@@ -166,11 +166,11 @@ export default function EndpointTree({ schemaUrl, onSelect, selectedEndpoint }: 
                       onClick={() => onSelect(route)}
                       className={`w-full text-left px-2 py-2 rounded-md transition-colors group ${
                         isActive 
-                          ? 'bg-primary/20 border border-primary/50 shadow-sm' 
+                          ? 'bg-white/10 border border-white/20' 
                           : 'hover:bg-white/5'
                       }`}
                     >
-                    <div className="flex gap-1.5 mb-1">
+                    <div className="flex gap-1.5 mb-1 items-center flex-wrap">
                       {route.methods
                         .filter((m: string) => !['HEAD', 'OPTIONS'].includes(m))
                         .map((method: string) => {
@@ -184,12 +184,45 @@ export default function EndpointTree({ schemaUrl, onSelect, selectedEndpoint }: 
                             };
                             return colors[m] || 'bg-gray-500/20 text-gray-400';
                           };
+                          
+                          // Extract action label from route name
+                          const getActionLabel = () => {
+                            if (!route.name) return null;
+                            
+                            // Remove common prefixes and convert to title case
+                            const parts = route.name.split('.');
+                            const action = parts[parts.length - 1];
+                            
+                            // Convert action names to readable labels
+                            const labels: Record<string, string> = {
+                              'index': 'List',
+                              'show': 'Show',
+                              'store': 'Create',
+                              'update': 'Update',
+                              'destroy': 'Delete',
+                              'login': 'Login',
+                              'logout': 'Logout',
+                              'register': 'Register',
+                              'email': 'Forgot Password',
+                              'reset': 'Reset Password',
+                              'verify': 'Verify Email',
+                              'resend': 'Resend Verification',
+                            };
+                            
+                            return labels[action] || action
+                              .split(/[-_]/)
+                              .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                              .join(' ');
+                          };
+                          
+                          const actionLabel = getActionLabel();
+                          
                           return (
                             <span
                               key={method}
                               className={`text-xs px-1.5 py-0.5 rounded font-mono font-semibold ${getMethodColor(method)}`}
                             >
-                              {method}
+                              {method}{actionLabel ? ` - ${actionLabel}` : ''}
                             </span>
                           );
                         })}

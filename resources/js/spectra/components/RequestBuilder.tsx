@@ -137,15 +137,47 @@ export default function RequestBuilder({ endpoint, executeUrl, onResponse, cooki
     return colors[m] || 'bg-gray-500/10 text-gray-500 border-gray-500/20';
   };
 
+  // Extract action label from route name
+  const getActionLabel = () => {
+    if (!endpoint.name) return null;
+    
+    const parts = endpoint.name.split('.');
+    const action = parts[parts.length - 1];
+    
+    const labels: Record<string, string> = {
+      'index': 'List',
+      'show': 'Show',
+      'store': 'Create',
+      'update': 'Update',
+      'destroy': 'Delete',
+      'login': 'Login',
+      'logout': 'Logout',
+      'register': 'Register',
+      'email': 'Forgot Password',
+      'reset': 'Reset Password',
+      'verify': 'Verify Email',
+      'resend': 'Resend Verification',
+    };
+    
+    return labels[action] || action
+      .split(/[-_]/)
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  };
+
+  const actionLabel = getActionLabel();
+
   return (
     <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
-          <div className="space-y-0.5">
-            <CardTitle className="text-base font-mono">{endpoint.uri}</CardTitle>
-            <CardDescription className="text-xs">Configure your request</CardDescription>
+          <div className="space-y-1">
+            {actionLabel && (
+              <CardTitle className="text-lg font-semibold">{actionLabel}</CardTitle>
+            )}
+            <CardDescription className="text-sm font-mono text-muted-foreground">{endpoint.uri}</CardDescription>
           </div>
-          <Badge className={`${getMethodColor(method)} font-mono font-bold px-2.5 py-1`}>
+          <Badge className={`${getMethodColor(method)} font-mono font-bold px-2.5 py-1 pointer-events-none`}>
             {method}
           </Badge>
         </div>
