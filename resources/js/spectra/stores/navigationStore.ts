@@ -7,6 +7,13 @@ interface ResponseHistoryItem {
   response: any;
 }
 
+interface Metrics {
+  totalRequests: number;
+  successfulRequests: number;
+  responseTimes: number[];
+  lastRequestTime: number | null;
+}
+
 interface NavigationState {
   selectedEndpoint: any | null;
   setSelectedEndpoint: (endpoint: any | null) => void;
@@ -19,6 +26,9 @@ interface NavigationState {
   responseHistory: Record<string, ResponseHistoryItem[]>; // keyed by endpoint URI
   addToHistory: (endpoint: any, response: any) => void;
   clearHistory: (endpointUri?: string) => void;
+  metrics: Metrics;
+  recordRequest: (status: number, timeMs: number) => void;
+  resetMetrics: () => void;
 }
 
 export const useNavigationStore = create<NavigationState>()(
@@ -70,6 +80,35 @@ export const useNavigationStore = create<NavigationState>()(
           }
           return { responseHistory: {} };
         }),
+      metrics: {
+        totalRequests: 0,
+        successfulRequests: 0,
+        responseTimes: [],
+        lastRequestTime: null,
+      },
+      recordRequest: (status, timeMs) =>
+        set((state) => {
+          const isSuccess = status >= 200 && status < 300;
+          const newResponseTimes = [...state.metrics.responseTimes, timeMs].slice(-20); // Keep last 20
+          
+          return {
+            metrics: {
+              totalRequests: state.metrics.totalRequests + 1,
+              successfulRequests: state.metrics.successfulRequests + (isSuccess ? 1 : 0),
+              responseTimes: newResponseTimes,
+              lastRequestTime: Date.now(),
+            },
+          };
+        }),
+      resetMetrics: () =>
+        set({
+          metrics: {
+            totalRequests: 0,
+            successfulRequests: 0,
+            responseTimes: [],
+            lastRequestTime: null,
+          },
+        }),
     }),
     {
       name: 'spectra-navigation',
@@ -120,6 +159,7 @@ export const useNavigationStore = create<NavigationState>()(
         expandedGroups: state.expandedGroups,
         bodyMode: state.bodyMode,
         responseHistory: state.responseHistory,
+        metrics: state.metrics,
       }),
     }
   )

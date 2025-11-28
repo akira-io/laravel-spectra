@@ -18,7 +18,7 @@ interface Props {
 }
 
 export default function RequestBuilder({ endpoint, executeUrl, onResponse, cookiesUrl }: Props) {
-  const { bodyMode, setBodyMode, addToHistory } = useNavigationStore();
+  const { bodyMode, setBodyMode, addToHistory, recordRequest } = useNavigationStore();
   const [method, setMethod] = useState(endpoint.methods.filter((m: string) => !['HEAD', 'OPTIONS'].includes(m))[0]);
   const [pathParams, setPathParams] = useState<Record<string, string>>({});
   const [query, setQuery] = useState<Record<string, string>>({});
@@ -193,6 +193,9 @@ export default function RequestBuilder({ endpoint, executeUrl, onResponse, cooki
       
       // Add to history
       addToHistory(endpoint, result);
+      
+      // Record metrics
+      recordRequest(result.status, result.time_ms);
       
       // Auto-regenerate body for POST/PUT/PATCH on success
       if (['POST', 'PUT', 'PATCH'].includes(method) && result.status >= 200 && result.status < 300) {
