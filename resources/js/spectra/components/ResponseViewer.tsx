@@ -73,9 +73,9 @@ export default function ResponseViewer({ response, endpoint }: Props) {
     <div className="flex flex-col h-full">
       <div className="flex items-center justify-between p-4 border-b border-border/50 bg-card/50 backdrop-blur-sm">
         <div className="flex items-center gap-3">
-          <Badge className={`${getStatusColor(response.status)} font-bold px-3 py-1`}>
+          <div className={`inline-flex items-center rounded-md border px-3 py-1 text-xs font-bold transition-colors ${getStatusColor(response.status)}`}>
             {response.status}
-          </Badge>
+          </div>
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <Clock className="h-3.5 w-3.5" />
             <span className="font-medium">{response.time_ms}ms</span>

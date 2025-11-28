@@ -24,4 +24,5 @@ Route::middleware($middleware)
         Route::get('/schema', [SchemaController::class, 'show'])->name('schema');
         Route::post('/execute', [ExecuteController::class, 'store'])->name('execute');
         Route::get('/cookies', [CookieController::class, 'index'])->name('cookies');
+        Route::get('/system-metrics', [SpectraController::class, 'systemMetrics'])->name('system-metrics');
     });
