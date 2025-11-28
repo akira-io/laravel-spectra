@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import ky from 'ky';
+import { ChevronDown, ChevronRight } from 'lucide-react';
 import { useNavigationStore } from '../stores/navigationStore';
 
 interface Props {
@@ -141,9 +142,11 @@ export default function EndpointTree({ schemaUrl, onSelect, selectedEndpoint }: 
               className="w-full flex items-center justify-between mb-1.5 px-2 py-1.5 rounded-md hover:bg-white/5 transition-colors"
             >
               <div className="flex items-center gap-2">
-                <span className="text-xs text-gray-500">
-                  {isExpanded ? '▼' : '▶'}
-                </span>
+                {isExpanded ? (
+                  <ChevronDown className="h-3 w-3 text-gray-500" />
+                ) : (
+                  <ChevronRight className="h-3 w-3 text-gray-500" />
+                )}
                 <h3 className="font-semibold text-xs text-white">
                   {groupName}
                 </h3>

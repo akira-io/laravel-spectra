@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/
 import { PlayIcon, Loader2, RefreshCw } from 'lucide-react';
 import CodeEditor from './CodeEditor';
 import CookiePanel from './CookiePanel';
+import { useNavigationStore } from '../stores/navigationStore';
 
 interface Props {
   endpoint: any;
@@ -17,6 +18,7 @@ interface Props {
 }
 
 export default function RequestBuilder({ endpoint, executeUrl, onResponse, cookiesUrl }: Props) {
+  const { bodyMode, setBodyMode, addToHistory } = useNavigationStore();
   const [method, setMethod] = useState(endpoint.methods.filter((m: string) => !['HEAD', 'OPTIONS'].includes(m))[0]);
   const [pathParams, setPathParams] = useState<Record<string, string>>({});
   const [query, setQuery] = useState<Record<string, string>>({});
@@ -174,6 +176,9 @@ export default function RequestBuilder({ endpoint, executeUrl, onResponse, cooki
 
       onResponse(result);
       
+      // Add to history
+      addToHistory(endpoint, result);
+      
       // Auto-regenerate body for POST/PUT/PATCH on success
       if (['POST', 'PUT', 'PATCH'].includes(method) && result.status >= 200 && result.status < 300) {
         setTimeout(() => {
@@ -274,8 +279,34 @@ export default function RequestBuilder({ endpoint, executeUrl, onResponse, cooki
           </TabsList>
 
           <TabsContent value="body" className="space-y-1.5 mt-3">
-            <div className="flex items-center justify-between">
-              <h3 className="text-xs font-semibold">Request Body (JSON)</h3>
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <h3 className="text-xs font-semibold">Request Body</h3>
+                <div className="inline-flex rounded-md bg-muted p-0.5 gap-0.5">
+                  <button
+                    type="button"
+                    onClick={() => setBodyMode('json')}
+                    className={`px-2.5 py-0.5 text-xs font-medium rounded transition-all cursor-pointer ${
+                      bodyMode === 'json'
+                        ? 'bg-background text-foreground shadow-sm'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    JSON
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setBodyMode('form')}
+                    className={`px-2.5 py-0.5 text-xs font-medium rounded transition-all cursor-pointer ${
+                      bodyMode === 'form'
+                        ? 'bg-background text-foreground shadow-sm'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    Form
+                  </button>
+                </div>
+              </div>
               {endpoint.body_parameters && Object.keys(endpoint.body_parameters).length > 0 && (
                 <Button
                   type="button"
@@ -289,13 +320,55 @@ export default function RequestBuilder({ endpoint, executeUrl, onResponse, cooki
                 </Button>
               )}
             </div>
-            <CodeEditor
-              value={body}
-              onChange={setBody}
-              language="json"
-              placeholder='{"key": "value"}'
-              minHeight="300px"
-            />
+            
+            {bodyMode === 'json' ? (
+              <CodeEditor
+                value={body}
+                onChange={setBody}
+                language="json"
+                placeholder='{"key": "value"}'
+                minHeight="300px"
+              />
+            ) : (
+              <div className="space-y-2">
+                {endpoint.body_parameters && Object.keys(endpoint.body_parameters).length > 0 ? (
+                  Object.entries(endpoint.body_parameters).map(([key, meta]: [string, any]) => {
+                    const currentValue = (() => {
+                      try {
+                        const parsed = JSON.parse(body);
+                        return parsed[key] || '';
+                      } catch {
+                        return '';
+                      }
+                    })();
+                    
+                    return (
+                      <div key={key} className="space-y-1">
+                        <label className="text-xs font-medium text-muted-foreground">
+                          {key} {meta.required && <span className="text-destructive">*</span>}
+                        </label>
+                        <Input
+                          value={currentValue}
+                          onChange={(e) => {
+                            try {
+                              const parsed = JSON.parse(body || '{}');
+                              parsed[key] = e.target.value;
+                              setBody(JSON.stringify(parsed, null, 2));
+                            } catch {
+                              setBody(JSON.stringify({ [key]: e.target.value }, null, 2));
+                            }
+                          }}
+                          placeholder={meta.description || key}
+                          className="h-8 text-xs"
+                        />
+                      </div>
+                    );
+                  })
+                ) : (
+                  <p className="text-xs text-muted-foreground">No body parameters defined</p>
+                )}
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="params" className="space-y-3 mt-3">
