@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import ky from 'ky';
+import { useNavigationStore } from '../stores/navigationStore';
 
 interface Props {
   schemaUrl: string;
@@ -11,7 +12,7 @@ export default function EndpointTree({ schemaUrl, onSelect, selectedEndpoint }: 
   const [routes, setRoutes] = useState<any[]>([]);
   const [filter, setFilter] = useState('');
   const [loading, setLoading] = useState(true);
-  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+  const { expandedGroups, toggleGroup } = useNavigationStore();
 
   useEffect(() => {
     ky.get(schemaUrl)
@@ -19,20 +20,9 @@ export default function EndpointTree({ schemaUrl, onSelect, selectedEndpoint }: 
       .then((data: any) => {
         setRoutes(data.routes || []);
         setLoading(false);
-        setExpandedGroups(new Set());
       })
       .catch(() => setLoading(false));
   }, [schemaUrl]);
-
-  const toggleGroup = (groupName: string) => {
-    const newExpanded = new Set(expandedGroups);
-    if (newExpanded.has(groupName)) {
-      newExpanded.delete(groupName);
-    } else {
-      newExpanded.add(groupName);
-    }
-    setExpandedGroups(newExpanded);
-  };
 
   const filteredRoutes = routes.filter(
     (route) =>
