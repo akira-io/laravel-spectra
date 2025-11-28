@@ -192,6 +192,19 @@ export default function EndpointTree({ schemaUrl, onSelect, selectedEndpoint }: 
                           const getActionLabel = () => {
                             if (!route.name) return null;
                             
+                            // Check URI first for special cases
+                            if (route.uri.includes('password')) {
+                              if (route.uri.includes('reset')) {
+                                return 'Reset Password';
+                              }
+                              if (route.uri.includes('forgot')) {
+                                return 'Forgot Password';
+                              }
+                              if (route.uri.includes('password') && !route.uri.includes('reset') && !route.uri.includes('forgot')) {
+                                return 'Update Password';
+                              }
+                            }
+                            
                             // Remove common prefixes and convert to title case
                             const parts = route.name.split('.');
                             const action = parts[parts.length - 1];

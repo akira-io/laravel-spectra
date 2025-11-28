@@ -5,7 +5,7 @@ import { Input } from './ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Badge } from './ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
-import { PlayIcon, Loader2 } from 'lucide-react';
+import { PlayIcon, Loader2, RefreshCw } from 'lucide-react';
 import CodeEditor from './CodeEditor';
 import CookiePanel from './CookiePanel';
 
@@ -22,26 +22,88 @@ export default function RequestBuilder({ endpoint, executeUrl, onResponse, cooki
   const [query, setQuery] = useState<Record<string, string>>({});
   const [headers, setHeaders] = useState<Record<string, string>>({ 'Accept': 'application/json' });
 
+  const generateRandomValue = (key: string, meta: any) => {
+    // Generate random values based on field name patterns
+    const lowerKey = key.toLowerCase();
+    
+    if (lowerKey.includes('email')) {
+      const randomNum = Math.floor(Math.random() * 10000);
+      return `user${randomNum}@example.com`;
+    }
+    
+    if (lowerKey.includes('name')) {
+      const names = ['John Doe', 'Jane Smith', 'Alice Johnson', 'Bob Wilson', 'Emma Brown', 'Michael Davis'];
+      return names[Math.floor(Math.random() * names.length)];
+    }
+    
+    if (lowerKey.includes('password')) {
+      return `password${Math.floor(Math.random() * 1000)}`;
+    }
+    
+    if (lowerKey.includes('phone')) {
+      return `+1${Math.floor(Math.random() * 9000000000 + 1000000000)}`;
+    }
+    
+    if (lowerKey.includes('url') || lowerKey.includes('website')) {
+      return `https://example${Math.floor(Math.random() * 100)}.com`;
+    }
+    
+    // Use meta.example if available, otherwise generate based on type
+    if (meta.example !== undefined && meta.example !== null) {
+      // Modify the example to make it unique
+      if (typeof meta.example === 'string') {
+        const randomNum = Math.floor(Math.random() * 10000);
+        return meta.example.includes('@') ? 
+          meta.example.replace(/\d+/, randomNum.toString()) : 
+          `${meta.example}${randomNum}`;
+      }
+      return meta.example;
+    }
+    
+    if (meta.type === 'integer') {
+      return Math.floor(Math.random() * 1000);
+    }
+    if (meta.type === 'boolean') {
+      return Math.random() > 0.5;
+    }
+    if (meta.type === 'array') {
+      return [];
+    }
+    
+    return `test_${Math.floor(Math.random() * 10000)}`;
+  };
+
   const initializeBody = () => {
     if (endpoint.body_parameters && Object.keys(endpoint.body_parameters).length > 0) {
       const bodyObj: Record<string, any> = {};
+      let passwordValue: string | null = null;
+      
+      // First pass: generate all values and capture password
       Object.entries(endpoint.body_parameters).forEach(([key, meta]: [string, any]) => {
-        // Use Faker example if available, otherwise use default
-        if (meta.example !== undefined && meta.example !== null) {
-          bodyObj[key] = meta.example;
-        } else if (meta.type === 'integer') {
-          bodyObj[key] = 0;
-        } else if (meta.type === 'boolean') {
-          bodyObj[key] = false;
-        } else if (meta.type === 'array') {
-          bodyObj[key] = [];
-        } else {
-          bodyObj[key] = '';
+        const value = generateRandomValue(key, meta);
+        bodyObj[key] = value;
+        
+        // Capture password value for confirmation
+        if (key.toLowerCase() === 'password') {
+          passwordValue = value as string;
         }
       });
+      
+      // Second pass: set password_confirmation to match password
+      Object.keys(bodyObj).forEach(key => {
+        const lowerKey = key.toLowerCase();
+        if ((lowerKey === 'password_confirmation' || lowerKey === 'passwordconfirmation') && passwordValue) {
+          bodyObj[key] = passwordValue;
+        }
+      });
+      
       return JSON.stringify(bodyObj, null, 2);
     }
     return '';
+  };
+  
+  const regenerateBody = () => {
+    setBody(initializeBody());
   };
   
   const [body, setBody] = useState(initializeBody());
@@ -111,6 +173,13 @@ export default function RequestBuilder({ endpoint, executeUrl, onResponse, cooki
         .json();
 
       onResponse(result);
+      
+      // Auto-regenerate body for POST/PUT/PATCH on success
+      if (['POST', 'PUT', 'PATCH'].includes(method) && result.status >= 200 && result.status < 300) {
+        setTimeout(() => {
+          regenerateBody();
+        }, 300); // Small delay to see the success first
+      }
     } catch (error: any) {
       onResponse({
         status: error.response?.status || 500,
@@ -140,6 +209,19 @@ export default function RequestBuilder({ endpoint, executeUrl, onResponse, cooki
   // Extract action label from route name
   const getActionLabel = () => {
     if (!endpoint.name) return null;
+    
+    // Check URI first for special cases
+    if (endpoint.uri.includes('password')) {
+      if (endpoint.uri.includes('reset')) {
+        return 'Reset Password';
+      }
+      if (endpoint.uri.includes('forgot')) {
+        return 'Forgot Password';
+      }
+      if (endpoint.uri.includes('password') && !endpoint.uri.includes('reset') && !endpoint.uri.includes('forgot')) {
+        return 'Update Password';
+      }
+    }
     
     const parts = endpoint.name.split('.');
     const action = parts[parts.length - 1];
@@ -192,7 +274,21 @@ export default function RequestBuilder({ endpoint, executeUrl, onResponse, cooki
           </TabsList>
 
           <TabsContent value="body" className="space-y-1.5 mt-3">
-            <h3 className="text-xs font-semibold">Request Body (JSON)</h3>
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-semibold">Request Body (JSON)</h3>
+              {endpoint.body_parameters && Object.keys(endpoint.body_parameters).length > 0 && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={regenerateBody}
+                  className="h-6 text-xs gap-1 hover:bg-transparent hover:text-current"
+                >
+                  <RefreshCw className="h-3 w-3" />
+                  Regenerate
+                </Button>
+              )}
+            </div>
             <CodeEditor
               value={body}
               onChange={setBody}
