@@ -1,20 +1,24 @@
 # Spectra API Inspector Documentation
 
-Welcome to the comprehensive documentation for Laravel Spectra - an interactive API inspector for Laravel 12 applications.
+Welcome to the comprehensive documentation for Laravel Spectra - an interactive API inspector for Laravel 12
+applications.
 
-## 📚 Documentation
+## Documentation
 
 ### Getting Started
+
 1. [Installation](01-installation.md) - Installation and setup instructions
 2. [Configuration](02-configuration.md) - Configuration options and environment setup
 3. [Quick Start](03-quick-start.md) - Get up and running in minutes
 
 ### Core Concepts
+
 4. [Architecture](04-architecture.md) - System design and component overview
 13. [Security](13-security.md) - Security features and best practices
 14. [Authentication](14-authentication.md) - Authentication modes and authorization
 
 ### Features
+
 5. [Route Discovery](05-route-discovery.md) - Auto-discovery of application routes
 6. [Schema Generation](06-schema-generation.md) - JSON Schema generation from validation rules
 7. [Request Execution](07-request-execution.md) - Internal request execution
@@ -22,10 +26,12 @@ Welcome to the comprehensive documentation for Laravel Spectra - an interactive 
 9. [Collections](09-collections.md) - Request collections management
 
 ### Reference
+
 10. [Keyboard Shortcuts](10-keyboard-shortcuts.md) - Available keyboard shortcuts
 11. [API Reference](11-api-reference.md) - Backend API endpoints
 
 ### Advanced
+
 12. [Troubleshooting](12-troubleshooting.md) - Common issues and solutions
 
 ## Quick Links
