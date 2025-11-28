@@ -8,6 +8,7 @@ import Collections from '../components/Collections';
 import {Button} from '../components/ui/button';
 import {Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle} from '../components/ui/dialog';
 import {Cookie, FolderOpen, FolderTree, Moon, Save, Share2, Shield, Sun, Zap} from 'lucide-react';
+import {useNavigationStore} from '../stores/navigationStore';
 
 interface Props {
     schemaUrl: string;
@@ -16,8 +17,7 @@ interface Props {
 }
 
 export default function Spectra({schemaUrl, executeUrl, cookiesUrl}: Props) {
-    const [selectedEndpoint, setSelectedEndpoint] = useState<any>(null);
-    const [response, setResponse] = useState<any>(null);
+    const {selectedEndpoint, setSelectedEndpoint, response, setResponse} = useNavigationStore();
     const [darkMode, setDarkMode] = useState(true);
     const [showCollectionsModal, setShowCollectionsModal] = useState(false);
 
@@ -29,7 +29,6 @@ export default function Spectra({schemaUrl, executeUrl, cookiesUrl}: Props) {
     useEffect(() => {
         document.body.classList.add('spectra-theme');
         document.documentElement.classList.add('dark');
-
         return () => {
             document.body.classList.remove('spectra-theme');
             document.documentElement.classList.remove('dark');
@@ -224,7 +223,7 @@ export default function Spectra({schemaUrl, executeUrl, cookiesUrl}: Props) {
                                                 {/* CTA */}
                                                 <div className='text-center pt-4'>
                                                     <p className='text-sm text-muted-foreground'>
-                                                        <span className='font-medium'>Select an endpoint from the sidebar to begin</span>
+                                                        👈 <span className='font-medium'>Select an endpoint from the sidebar to begin</span>
                                                     </p>
                                                 </div>
                                             </div>
