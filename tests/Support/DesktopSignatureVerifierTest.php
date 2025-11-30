@@ -78,3 +78,18 @@ it('rejects invalid timestamp format', function () {
 
     expect($result)->toBeFalse();
 });
+
+it('handles timestamp conversion errors gracefully', function () {
+    $cache = app(Illuminate\Cache\Repository::class);
+    $verifier = new DesktopSignatureVerifier($cache);
+
+    $bodyJson = '{"test":"data"}';
+    $publicKey = 'test-public-key';
+    $timestamp = PHP_INT_MAX;
+    $nonce = bin2hex(random_bytes(16));
+    $signature = 'test-signature';
+
+    $result = $verifier->verify($bodyJson, $publicKey, (string) $timestamp, $nonce, $signature, 20);
+
+    expect($result)->toBeFalse();
+});

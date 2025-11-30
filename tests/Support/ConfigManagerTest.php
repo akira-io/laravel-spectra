@@ -40,7 +40,8 @@ it('provides helper methods for general config', function () {
     expect($configManager->isEnabled())->toBeBool()
         ->and($configManager->isOnlyLocal())->toBeBool()
         ->and($configManager->requiresAuth())->toBeBool()
-        ->and($configManager->getGuard())->toBeString();
+        ->and($configManager->getGuard())->toBeString()
+        ->and($configManager->getImpersonationGate())->toBeString();
 });
 
 it('provides helper methods for route filters', function () {
@@ -64,5 +65,6 @@ it('provides helper methods for desktop config', function () {
 
     expect($configManager->isDesktopEnabled())->toBeBool()
         ->and($configManager->getDesktopUrl())->toBeString()
+        ->and($configManager->getDesktopPublicKey())->toBeString()
         ->and($configManager->getDesktopMaxDrift())->toBeInt();
 });

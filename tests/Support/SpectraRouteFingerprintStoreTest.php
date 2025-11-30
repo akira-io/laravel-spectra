@@ -38,3 +38,28 @@ it('detects fingerprint as unchanged when same value stored', function () {
 
     expect($store->changed($fingerprint))->toBeFalse();
 });
+
+it('returns null when get is called on non-existent file', function () {
+    $filesystem = app(Filesystem::class);
+    $store = new SpectraRouteFingerprintStore($filesystem);
+
+    $path = storage_path('framework/spectra/routes.hash');
+    $filesystem->delete($path);
+
+    $result = $store->get();
+    expect($result)->toBeNull();
+});
+
+it('creates directory when putting fingerprint if it does not exist', function () {
+    $filesystem = app(Filesystem::class);
+    $store = new SpectraRouteFingerprintStore($filesystem);
+
+    $path = storage_path('framework/spectra/routes.hash');
+    $directory = dirname($path);
+    $filesystem->deleteDirectory(dirname($directory));
+
+    $fingerprint = 'test-new-dir-'.bin2hex(random_bytes(8));
+    $store->put($fingerprint);
+
+    expect($filesystem->exists($path))->toBeTrue();
+});
