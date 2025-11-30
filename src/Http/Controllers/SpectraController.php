@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Akira\Spectra\Http\Controllers;
 
+use Illuminate\Http\JsonResponse;
 use Illuminate\Routing\Controller;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -23,12 +24,12 @@ final class SpectraController extends Controller
         ]);
     }
 
-    public function systemMetrics(): \Illuminate\Http\JsonResponse
+    public function systemMetrics(): JsonResponse
     {
         $memoryLimit = ini_get('memory_limit');
         $memoryUsage = memory_get_usage(true);
         $memoryLimitBytes = $this->convertToBytes($memoryLimit);
-        
+
         return response()->json([
             'memory' => [
                 'used' => $this->formatBytes($memoryUsage),
@@ -44,8 +45,8 @@ final class SpectraController extends Controller
 
     private function convertToBytes(string $value): int
     {
-        $value = trim($value);
-        $unit = strtolower($value[strlen($value) - 1]);
+        $value = mb_trim($value);
+        $unit = mb_strtolower($value[mb_strlen($value) - 1]);
         $number = (int) $value;
 
         return match ($unit) {
@@ -59,15 +60,16 @@ final class SpectraController extends Controller
     private function formatBytes(int $bytes): string
     {
         if ($bytes >= 1024 * 1024 * 1024) {
-            return round($bytes / (1024 * 1024 * 1024), 2) . 'GB';
+            return round($bytes / (1024 * 1024 * 1024), 2).'GB';
         }
         if ($bytes >= 1024 * 1024) {
-            return round($bytes / (1024 * 1024), 2) . 'MB';
+            return round($bytes / (1024 * 1024), 2).'MB';
         }
         if ($bytes >= 1024) {
-            return round($bytes / 1024, 2) . 'KB';
+            return round($bytes / 1024, 2).'KB';
         }
-        return $bytes . 'B';
+
+        return $bytes.'B';
     }
 
     /**
@@ -77,7 +79,7 @@ final class SpectraController extends Controller
     {
         $manifestPath = public_path('vendor/spectra/build/.vite/manifest.json');
 
-        if (!file_exists($manifestPath)) {
+        if (! file_exists($manifestPath)) {
             return [
                 'css' => asset('vendor/spectra/build/assets/app.css'),
                 'js' => asset('vendor/spectra/build/assets/main.js'),

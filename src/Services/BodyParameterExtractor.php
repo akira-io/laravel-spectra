@@ -100,7 +100,7 @@ final readonly class BodyParameterExtractor
 
                         // Auto-add confirmation field if rule has 'confirmed'
                         if (str_contains(mb_strtolower($ruleString), 'confirmed')) {
-                            $confirmationField = $field . '_confirmation';
+                            $confirmationField = $field.'_confirmation';
                             $parameters[$confirmationField] = [
                                 'type' => $this->inferType($ruleString),
                                 'required' => $this->isRequired($ruleString),
@@ -169,6 +169,7 @@ final readonly class BodyParameterExtractor
 
             // For rule objects without __toString, extract class name
             $className = class_basename($rule::class);
+
             return mb_strtolower(str_replace('Rule', '', $className));
         }
 

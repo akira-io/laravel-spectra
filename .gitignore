@@ -44,3 +44,4 @@ build/phpstan/cache/PHPStan/09/9b/
 
 build/phpstan/
 /build/report.junit.xml
+/TODO.md

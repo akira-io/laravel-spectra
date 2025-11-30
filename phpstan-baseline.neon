@@ -3,8 +3,8 @@ parameters:
 		-
 			message: '#^Called ''env'' outside of the config directory which returns null when the config is cached, use ''config''\.$#'
 			identifier: larastan.noEnvCallsOutsideOfConfig
-			count: 6
-			path: config/spectra.php
+			count: 10
+			path: config
 
 		-
 			message: '#^Call to an undefined method Illuminate\\Contracts\\Auth\\UserProvider\:\:getModel\(\)\.$#'
@@ -66,8 +66,3 @@ parameters:
 			count: 1
 			path: src/Services/SchemaBuilder.php
 
-		-
-			message: '#^Call to an undefined static method Illuminate\\Support\\Facades\\Vite\:\:useBuildPath\(\)\.$#'
-			identifier: staticMethod.notFound
-			count: 1
-			path: src/SpectraServiceProvider.php
