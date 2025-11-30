@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use Akira\Spectra\Commands\SyncDesktopCommand;
 use Illuminate\Support\Facades\Http;
 
 it('executes sync desktop command successfully', function () {

@@ -6,7 +6,6 @@ use Akira\Spectra\Actions\SendSpectraPayloadToDesktopAction;
 use Akira\Spectra\Data\SpectraPayloadVO;
 use Akira\Spectra\Support\ConfigManager;
 use Akira\Spectra\Support\SpectraRouteFingerprintStore;
-use Illuminate\Support\Facades\Http;
 
 it('does nothing when desktop is disabled', function () {
     $fingerprintStore = app(SpectraRouteFingerprintStore::class);
@@ -45,7 +44,7 @@ it('does nothing when fingerprint has not changed', function () {
         projectPath: '/app',
         fingerprint: 'test-fingerprint',
     );
-    
+
     $action->handle($payload);
 
     expect(true)->toBeTrue();

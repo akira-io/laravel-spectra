@@ -78,3 +78,35 @@ it('rejects invalid timestamp format', function () {
 
     expect($result)->toBeFalse();
 });
+
+it('accepts signature with timestamp within drift', function () {
+    $verifier = app(DesktopSignatureVerifier::class);
+
+    $bodyJson = '{"test":"data"}';
+    $publicKey = 'test-public-key';
+    $timestamp = (string) (now()->timestamp - 10);
+    $nonce = bin2hex(random_bytes(16));
+    $secret = $publicKey.$timestamp.$nonce;
+    $signature = hash_hmac('sha256', $bodyJson, $secret, false);
+
+    $result = $verifier->verify($bodyJson, $publicKey, $timestamp, $nonce, $signature, 20);
+
+    expect($result)->toBeTrue();
+});
+
+it('rejects signature with future timestamp beyond drift', function () {
+    $verifier = app(DesktopSignatureVerifier::class);
+
+    $bodyJson = '{"test":"data"}';
+    $publicKey = 'test-public-key';
+    $futureTimestamp = (string) (now()->timestamp + 30);
+    $nonce = bin2hex(random_bytes(16));
+    $secret = $publicKey.$futureTimestamp.$nonce;
+    $signature = hash_hmac('sha256', $bodyJson, $secret, false);
+
+    $result = $verifier->verify($bodyJson, $publicKey, $futureTimestamp, $nonce, $signature, 20);
+
+    expect($result)->toBeFalse();
+});
+
+
