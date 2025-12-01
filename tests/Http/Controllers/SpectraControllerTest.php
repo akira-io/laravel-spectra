@@ -67,3 +67,69 @@ it('returns proper content type', function () {
 
     expect($response->headers->get('content-type'))->toContain('json');
 });
+
+it('memory used is formatted string', function () {
+    $response = $this->get('/spectra/system-metrics');
+
+    $memory = $response->json('memory.used');
+    expect(is_string($memory))->toBeTrue();
+});
+
+it('memory percentage is numeric', function () {
+    $response = $this->get('/spectra/system-metrics');
+
+    $percentage = $response->json('memory.percentage');
+    expect(is_numeric($percentage))->toBeTrue();
+});
+
+it('memory percentage is between 0 and 100', function () {
+    $response = $this->get('/spectra/system-metrics');
+
+    $percentage = $response->json('memory.percentage');
+    expect($percentage >= 0 && $percentage <= 100)->toBeTrue();
+});
+
+it('cache driver is string', function () {
+    $response = $this->get('/spectra/system-metrics');
+
+    expect(is_string($response->json('cache_driver')))->toBeTrue();
+});
+
+it('queue driver is string', function () {
+    $response = $this->get('/spectra/system-metrics');
+
+    expect(is_string($response->json('queue_driver')))->toBeTrue();
+});
+
+it('db connection is string', function () {
+    $response = $this->get('/spectra/system-metrics');
+
+    expect(is_string($response->json('db_connection')))->toBeTrue();
+});
+
+it('debug flag is boolean', function () {
+    $response = $this->get('/spectra/system-metrics');
+
+    expect(is_bool($response->json('debug')))->toBeTrue();
+});
+
+it('system metrics response structure is consistent', function () {
+    $response = $this->get('/spectra/system-metrics');
+
+    $data = $response->json();
+    expect($data)->toHaveKeys(['memory', 'debug', 'cache_driver', 'queue_driver', 'db_connection']);
+});
+
+it('memory structure includes all keys', function () {
+    $response = $this->get('/spectra/system-metrics');
+
+    $memory = $response->json('memory');
+    expect($memory)->toHaveKeys(['used', 'limit', 'percentage']);
+});
+
+it('returns json response with correct status', function () {
+    $response = $this->get('/spectra/system-metrics');
+
+    expect($response->status())->toBe(200)
+        ->and($response->headers->get('content-type'))->toContain('json');
+});

@@ -82,3 +82,75 @@ it('handles route without action controller', function () {
 
     expect($result)->toBeArray();
 });
+
+it('processes route with empty uses key', function () {
+    $route = new Route(['GET'], '/test', [
+        'uses' => null,
+    ]);
+
+    $result = $this->extractor->extract($route);
+
+    expect($result)->toBeArray();
+});
+
+it('handles routes with no action defined', function () {
+    $route = new Route(['GET'], '/test', []);
+
+    $result = $this->extractor->extract($route);
+
+    expect($result)->toBeArray();
+});
+
+it('extracts from closure route correctly', function () {
+    $route = new Route(['GET'], '/closure', [
+        'uses' => fn () => 'test',
+    ]);
+
+    $result = $this->extractor->extract($route);
+
+    expect($result)->toBeArray();
+});
+
+it('handles reflection exception gracefully', function () {
+    $route = new Route(['GET'], '/test', [
+        'uses' => fn () => 'test',
+    ]);
+
+    $result = $this->extractor->extract($route);
+
+    expect($result)->toBeArray();
+});
+
+it('processes route with controller and method', function () {
+    $route = new Route(['GET'], '/test', [
+        'controller' => 'TestController@index',
+    ]);
+
+    $result = $this->extractor->extract($route);
+
+    expect($result)->toBeArray();
+});
+
+it('handles invalid controller class name', function () {
+    $route = new Route(['GET'], '/test', [
+        'controller' => 'InvalidNamespace\\NonExistent@method',
+    ]);
+
+    $result = $this->extractor->extract($route);
+
+    expect($result)->toBeArray();
+});
+
+it('processes multiple routes without issues', function () {
+    $route1 = new Route(['GET'], '/test1', ['uses' => fn () => 'test']);
+    $route2 = new Route(['POST'], '/test2', ['uses' => fn () => 'test']);
+    $route3 = new Route(['PUT'], '/test3', ['uses' => fn () => 'test']);
+
+    $result1 = $this->extractor->extract($route1);
+    $result2 = $this->extractor->extract($route2);
+    $result3 = $this->extractor->extract($route3);
+
+    expect($result1)->toBeArray()
+        ->and($result2)->toBeArray()
+        ->and($result3)->toBeArray();
+});
