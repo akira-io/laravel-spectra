@@ -64,5 +64,12 @@ it('provides helper methods for desktop config', function () {
 
     expect($configManager->isDesktopEnabled())->toBeBool()
         ->and($configManager->getDesktopUrl())->toBeString()
+        ->and($configManager->getDesktopPublicKey())->toBeString()
         ->and($configManager->getDesktopMaxDrift())->toBeInt();
+});
+
+it('provides impersonation gate getter', function () {
+    $configManager = ConfigManager::make();
+
+    expect($configManager->getImpersonationGate())->toBeString();
 });

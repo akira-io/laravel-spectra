@@ -216,3 +216,145 @@ it('schema spec contains all required fields', function () {
         ->and($schema->bodySchema)->toBeArray()
         ->and($schema->headersSchema)->toBeArray();
 });
+
+it('path schema includes json schema version', function () {
+    $route = new RouteMeta(
+        uri: '/test',
+        methods: ['GET'],
+        name: 'test.route',
+        action: 'TestController@show',
+        middleware: [],
+        parameters: []
+    );
+
+    $schemas = $this->builder->buildSchemas([$route]);
+
+    $schema = $schemas['test.route::GET'];
+    expect($schema->pathSchema)->toHaveKey('$schema')
+        ->and($schema->pathSchema['$schema'])->toBe('https://json-schema.org/draft/2020-12/schema');
+});
+
+it('headers schema includes accept header', function () {
+    $route = new RouteMeta(
+        uri: '/test',
+        methods: ['GET'],
+        name: 'test.route',
+        action: 'TestController@show',
+        middleware: [],
+        parameters: []
+    );
+
+    $schemas = $this->builder->buildSchemas([$route]);
+
+    $schema = $schemas['test.route::GET'];
+    expect($schema->headersSchema['properties']['Accept'])->toHaveKey('type')
+        ->and($schema->headersSchema['properties']['Accept']['type'])->toBe('string');
+});
+
+it('schema response has required array', function () {
+    $route = new RouteMeta(
+        uri: '/test',
+        methods: ['GET'],
+        name: 'test.route',
+        action: 'TestController@show',
+        middleware: [],
+        parameters: []
+    );
+
+    $schemas = $this->builder->buildSchemas([$route]);
+
+    $schema = $schemas['test.route::GET'];
+    expect($schema->querySchema)->toHaveKey('required')
+        ->and(is_array($schema->querySchema['required']))->toBeTrue();
+});
+
+it('path schema with parameters includes them', function () {
+    $param1 = new ParameterMeta('id', true, '[0-9]+');
+    $param2 = new ParameterMeta('slug', false, '[a-z-]+');
+
+    $route = new RouteMeta(
+        uri: '/test/{id}/{slug}',
+        methods: ['GET'],
+        name: 'test.show',
+        action: 'TestController@show',
+        middleware: [],
+        parameters: [$param1, $param2]
+    );
+
+    $schemas = $this->builder->buildSchemas([$route]);
+
+    $schema = $schemas['test.show::GET'];
+    expect(count($schema->pathSchema['properties']) >= 2)->toBeTrue();
+});
+
+it('path schema required fields excludes optional params', function () {
+    $param1 = new ParameterMeta('id', true, '[0-9]+');
+    $param2 = new ParameterMeta('slug', false, null);
+
+    $route = new RouteMeta(
+        uri: '/test/{id}/{slug}',
+        methods: ['GET'],
+        name: 'test.show',
+        action: 'TestController@show',
+        middleware: [],
+        parameters: [$param1, $param2]
+    );
+
+    $schemas = $this->builder->buildSchemas([$route]);
+
+    $schema = $schemas['test.show::GET'];
+    expect(in_array('id', $schema->pathSchema['required']))->toBeTrue();
+});
+
+it('PUT method uses body schema', function () {
+    $route = new RouteMeta(
+        uri: '/test/{id}',
+        methods: ['PUT'],
+        name: 'test.update',
+        action: 'TestController@update',
+        middleware: [],
+        parameters: []
+    );
+
+    $schemas = $this->builder->buildSchemas([$route]);
+
+    $schema = $schemas['test.update::PUT'];
+    expect($schema->bodySchema)->toHaveKey('$schema')
+        ->and($schema->bodySchema)->toHaveKey('properties');
+});
+
+it('PATCH method uses body schema', function () {
+    $route = new RouteMeta(
+        uri: '/test/{id}',
+        methods: ['PATCH'],
+        name: 'test.patch',
+        action: 'TestController@patch',
+        middleware: [],
+        parameters: []
+    );
+
+    $schemas = $this->builder->buildSchemas([$route]);
+
+    $schema = $schemas['test.patch::PATCH'];
+    expect($schema->bodySchema)->toHaveKey('$schema')
+        ->and($schema->bodySchema)->toHaveKey('type')
+        ->and($schema->bodySchema['type'])->toBe('object');
+});
+
+it('numeric pattern infers integer type', function () {
+    $param = new ParameterMeta('id', true, '[0-9]+');
+
+    $route = new RouteMeta(
+        uri: '/test/{id}',
+        methods: ['GET'],
+        name: 'test.show',
+        action: 'TestController@show',
+        middleware: [],
+        parameters: [$param]
+    );
+
+    $schemas = $this->builder->buildSchemas([$route]);
+
+    $schema = $schemas['test.show::GET'];
+    expect($schema->pathSchema['properties']['id']['type'])->toBe('integer');
+});

@@ -289,3 +289,50 @@ it('includes multiple headers in response', function () {
 
     expect($result->headers)->toBeArray();
 });
+
+it('handles POST request with raw body', function () {
+    $this->router->post('/proxy-test-raw-body', function () {
+        return response()->json(['received' => request()->getContent()], 201);
+    });
+
+    $command = new ExecuteCommand(
+        endpoint: '/proxy-test-raw-body',
+        method: 'POST',
+        body: '{"raw": "json"}',
+    );
+
+    $result = $this->proxy->handle($command);
+
+    expect($result->status)->toBe(201);
+});
+
+it('handles POST request without body', function () {
+    $this->router->post('/proxy-test-no-body', fn () => response()->json(['ok' => true], 201));
+
+    $command = new ExecuteCommand(
+        endpoint: '/proxy-test-no-body',
+        method: 'POST',
+        body: null,
+    );
+
+    $result = $this->proxy->handle($command);
+
+    expect($result->status)->toBe(201);
+});
+
+it('authenticates with bearer token', function () {
+    $this->router->post('/proxy-auth-bearer', function () {
+        return response()->json(['authenticated' => true]);
+    });
+
+    $command = new ExecuteCommand(
+        endpoint: '/proxy-auth-bearer',
+        method: 'POST',
+        authMode: AuthMode::BEARER,
+        bearerToken: 'test-token-123',
+    );
+
+    $result = $this->proxy->handle($command);
+
+    expect($result->status)->toBeGreaterThanOrEqual(200);
+});
