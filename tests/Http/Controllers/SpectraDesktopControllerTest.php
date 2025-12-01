@@ -10,7 +10,15 @@ it('returns 403 when desktop integration is disabled', function () {
     expect($response->status())->toBe(403);
 });
 
-it('returns 403 when missing token header', function () {
+it('returns 403 when missing signature headers', function () {
+    config()->set('spectra-desktop.enabled', true);
+
+    $response = $this->get('/spectra/desktop/ping');
+
+    expect($response->status())->toBe(403);
+});
+
+it('returns 403 when x-spectra-token header missing', function () {
     config()->set('spectra-desktop.enabled', true);
 
     $response = $this->get('/spectra/desktop/ping', [
@@ -22,7 +30,7 @@ it('returns 403 when missing token header', function () {
     expect($response->status())->toBe(403);
 });
 
-it('returns 403 when missing timestamp header', function () {
+it('returns 403 when x-spectra-timestamp header missing', function () {
     config()->set('spectra-desktop.enabled', true);
 
     $response = $this->get('/spectra/desktop/ping', [
@@ -34,7 +42,7 @@ it('returns 403 when missing timestamp header', function () {
     expect($response->status())->toBe(403);
 });
 
-it('returns 403 when missing nonce header', function () {
+it('returns 403 when x-spectra-nonce header missing', function () {
     config()->set('spectra-desktop.enabled', true);
 
     $response = $this->get('/spectra/desktop/ping', [
@@ -46,7 +54,7 @@ it('returns 403 when missing nonce header', function () {
     expect($response->status())->toBe(403);
 });
 
-it('returns 403 when missing signature header', function () {
+it('returns 403 when x-spectra-signature header missing', function () {
     config()->set('spectra-desktop.enabled', true);
 
     $response = $this->get('/spectra/desktop/ping', [
@@ -72,7 +80,7 @@ it('returns 403 when token is invalid', function () {
     expect($response->status())->toBe(403);
 });
 
-it('blocks requests to ping when disabled', function () {
+it('blocks request to ping when desktop disabled', function () {
     config()->set('spectra-desktop.enabled', false);
 
     $response = $this->get('/spectra/desktop/ping', [
@@ -85,7 +93,7 @@ it('blocks requests to ping when disabled', function () {
     expect($response->status())->toBe(403);
 });
 
-it('blocks requests to export when disabled', function () {
+it('blocks request to export when desktop disabled', function () {
     config()->set('spectra-desktop.enabled', false);
 
     $response = $this->get('/spectra/desktop/export', [
@@ -98,7 +106,7 @@ it('blocks requests to export when disabled', function () {
     expect($response->status())->toBe(403);
 });
 
-it('blocks post requests to force-sync when disabled', function () {
+it('blocks post request to force-sync when desktop disabled', function () {
     config()->set('spectra-desktop.enabled', false);
 
     $response = $this->post('/spectra/desktop/force-sync', [], [

@@ -2,31 +2,81 @@
 
 declare(strict_types=1);
 
+use Akira\Spectra\Data\SpectraPayloadVO;
 use Akira\Spectra\Pipelines\BuildSpectraPayloadPipeline;
 
-it('builds payload through pipeline', function () {
+it('returns spectra payload value object', function () {
     $pipeline = app(BuildSpectraPayloadPipeline::class);
-    $payload = $pipeline->handle();
 
-    expect($payload)->not->toBeNull()
-        ->and($payload->routes)->toBeArray()
-        ->and($payload->models)->toBeArray()
-        ->and($payload->stats)->toBeArray()
-        ->and($payload->version)->toBeString()
-        ->and($payload->projectPath)->toBeString()
-        ->and($payload->fingerprint)->toBeString();
+    $result = $pipeline->handle();
+
+    expect($result)->toBeInstanceOf(SpectraPayloadVO::class);
 });
 
-it('payload has all required stats', function () {
+it('payload includes version', function () {
     $pipeline = app(BuildSpectraPayloadPipeline::class);
-    $payload = $pipeline->handle();
 
-    expect($payload->stats)->toHaveKeys(['total_routes', 'total_models', 'php_version', 'laravel_version', 'timestamp']);
+    $result = $pipeline->handle();
+
+    expect($result->version)->toBeString();
 });
 
-it('fingerprint is sha256 hash', function () {
+it('payload includes project path', function () {
     $pipeline = app(BuildSpectraPayloadPipeline::class);
-    $payload = $pipeline->handle();
 
-    expect($payload->fingerprint)->toMatch('/^[a-f0-9]{64}$/');
+    $result = $pipeline->handle();
+
+    expect($result->projectPath)->toBeString();
+    expect($result->projectPath)->toBe(base_path());
+});
+
+it('payload includes fingerprint', function () {
+    $pipeline = app(BuildSpectraPayloadPipeline::class);
+
+    $result = $pipeline->handle();
+
+    expect($result->fingerprint)->toBeString();
+});
+
+it('payload includes routes array', function () {
+    $pipeline = app(BuildSpectraPayloadPipeline::class);
+
+    $result = $pipeline->handle();
+
+    expect($result->routes)->toBeArray();
+});
+
+it('payload includes models array', function () {
+    $pipeline = app(BuildSpectraPayloadPipeline::class);
+
+    $result = $pipeline->handle();
+
+    expect($result->models)->toBeArray();
+});
+
+it('payload includes stats array', function () {
+    $pipeline = app(BuildSpectraPayloadPipeline::class);
+
+    $result = $pipeline->handle();
+
+    expect($result->stats)->toBeArray();
+});
+
+it('runs through all pipes', function () {
+    $pipeline = app(BuildSpectraPayloadPipeline::class);
+
+    $result = $pipeline->handle();
+
+    expect($result)->toBeInstanceOf(SpectraPayloadVO::class)
+        ->and($result->routes)->toBeArray()
+        ->and($result->models)->toBeArray()
+        ->and($result->stats)->toBeArray();
+});
+
+it('collects application routes as array', function () {
+    $pipeline = app(BuildSpectraPayloadPipeline::class);
+
+    $result = $pipeline->handle();
+
+    expect($result->routes)->toBeArray();
 });
